@@ -24,11 +24,23 @@ The source checkouts and artifact snapshots are identified in [sources.json](sou
 
 Use the public Plonky3 checkout at the `p3.commit` pin for `--p3`. The included patch reconstructs the measured Binary QA source on that pin and adds the RS setup timing hook. The measured QA revision is recorded separately in the manifest.
 
+For `--eacode`, use the extracted `EACode` directory from the artifact ZIP. The downloaded ZIP matches `eacode_archive_sha256` in the manifest. [CRYPTO 2024 EACode artifact](https://artifacts.iacr.org/crypto/2024/a10/)
+
+For `--era` on ps, use the verified snapshot under `~/zkp-research/experiments/code-encoding-bench-2026-11-21/upstream-artifacts/era`.
+
+The following commands assume the checkouts and extracted snapshots are arranged under one directory with the names shown below.
+
 ~~~sh
 cd benchmarks
-python3 scripts/materialize.py --help
+inputs=/path/to/upstreams
+python3 scripts/materialize.py \
+  --p3 "$inputs/p3" --hyperfold "$inputs/hyperfold" \
+  --binary-hyperfold "$inputs/binary-hyperfold" --bolt "$inputs/bolt" \
+  --plonkish "$inputs/plonkish" --lcpc "$inputs/lcpc" \
+  --lightning "$inputs/lightning" --spin "$inputs/spin" \
+  --era "$inputs/era" --eacode "$inputs/EACode"
 scripts/compile-rust.sh core era bolt plonkish eacode lcpc
-MCL_ROOT=/path/to/mcl scripts/compile-cpp.sh lightning spin
+MCL_ROOT="$inputs/mcl" scripts/compile-cpp.sh lightning spin
 python3 run.py --dry-run
 python3 run.py
 python3 audit_raw.py --samples samples.csv
