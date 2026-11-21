@@ -1,9 +1,11 @@
 {
   "repos": {
     "p3": {
-      "repository": "https://github.com/jjllzhang/plonky3-binary-qa",
-      "commit": "19affa0a8de1b283e766556b757725c701397657",
-      "upstream_base": "https://github.com/Plonky3/Plonky3/commit/0d803737b681774186cd283b1fd2d8e493655c82"
+      "repository": "https://github.com/Plonky3/Plonky3",
+      "commit": "0d803737b681774186cd283b1fd2d8e493655c82",
+      "measured_qa_commit": "19affa0a8de1b283e766556b757725c701397657",
+      "measured_qa_tree": "c8f9183b17deec638877ced6cbbf2741e03b0dc1",
+      "measured_qa_project": "https://github.com/jjllzhang/plonky3-binary-qa"
     },
     "binary-hyperfold": {
       "repository": "https://github.com/jjllzhang/binary-hyperfold",

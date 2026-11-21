@@ -12,9 +12,17 @@ An input is one vector of K = 2^k native symbols. A driver calls one encoder and
 
 Native source setup may consume system randomness. Lightning seeds its message and control parameters, while graph edges and some BN254 weights are drawn from system random sources. Rerunning reproduces the geometry and timing protocol.
 
+## Executable provenance
+
+The first 270 formal cases ran with the core and Bolt binaries listed in [the executable manifest](host/binary-sha256.txt). The early runner recorded the executable path and command for each case. It gained per-case binary hashes after those cases.
+
+The four k=20 plonkish BF64 packed RAA and M127 BaseFold cases used [the original plonkish binary](host/sdig3-old-binary.txt). The rebuild corrected parity reset in the plonkish Brakedown path. The earlier M127 Brakedown run was archived outside the grid. Formal Brakedown samples use [the corrected binary](host/sdig3-new-binary.txt).
+
 ## Build
 
 The source checkouts and artifact snapshots are identified in [sources.json](sources.json). The materialize script accepts paths to those inputs, checks the revisions or source hashes, and applies the stored benchmark patches into the empty source directory. SPIN and Lightning use a C++20 compiler, CMake, and the listed mcl checkout. MCL_ROOT should point at that checkout with a Release build under build/lib/.
+
+Use the public Plonky3 checkout at the `p3.commit` pin for `--p3`. The included patch reconstructs the measured Binary QA source on that pin and adds the RS setup timing hook. The measured QA revision is recorded separately in the manifest.
 
 ~~~sh
 cd benchmarks
