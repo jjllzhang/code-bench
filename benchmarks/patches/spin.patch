@@ -1,0 +1,19 @@
+--- a/spin/src/kernels/Block.h
++++ b/spin/src/kernels/Block.h
+@@ -30,7 +30,7 @@
+ // may use mData directly; elsewhere it is two 64-bit words.
+ // GCC/Clang may_alias plus private -fno-strict-aliasing permits the
+ // documented byte-view boundary without type-punning in callers.
+-struct alignas(16) SPIN_MAY_ALIAS block {
++struct alignas(16) block {
+ #if SPIN_X86
+     __m128i mData;
+     block()=default;
+@@ -49,6 +49,6 @@
+ #endif
+     std::uint64_t lo() const {std::uint64_t w;std::memcpy(&w,this,8);return w;}
+     std::uint64_t hi() const {std::uint64_t w;std::memcpy(&w,reinterpret_cast<const char*>(this)+8,8);return w;}
+-};
++} SPIN_MAY_ALIAS;
+ static_assert(sizeof(block)==16 && alignof(block)==16);
+ }

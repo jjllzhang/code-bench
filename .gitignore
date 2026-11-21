@@ -1,0 +1,7 @@
+/benchmarks/source/
+/benchmarks/build/
+/benchmarks/bin/
+/benchmarks/raw/
+/benchmarks/results/
+__pycache__/
+*.pyc

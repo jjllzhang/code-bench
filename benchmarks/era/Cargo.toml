@@ -1,0 +1,15 @@
+[package]
+name = "encoding-era"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+era-codes = { path = "../source/era", default-features = false, features = ["parallel"] }
+ark-secp256k1 = "0.5"
+rand = "0.9"
+rayon = "1.12"
+libc = "0.2"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

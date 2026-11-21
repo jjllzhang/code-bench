@@ -1,0 +1,31 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -10,17 +10,17 @@
+ flock = ["dep:flock-field", "dep:flock-hash", "dep:flock-merkle", "dep:flock-multilinear", "dep:flock-parallel", "dep:flock-transcript", "dep:flock-core", "dep:flock-prover"]
+ 
+ [dependencies]
+-p3-field = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
+-p3-binary-field = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
+-p3-binary-dft = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
+-p3-commit = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
+-p3-merkle-tree = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
+-p3-blake3 = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
+-p3-symmetric = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
+-p3-challenger = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
+-p3-matrix = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
+-p3-maybe-rayon = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
+-p3-util = { git = "https://github.com/Plonky3/Plonky3.git", rev = "0d803737b681774186cd283b1fd2d8e493655c82" }
++p3-field = { path = "../p3/field" }
++p3-binary-field = { path = "../p3/binary-field" }
++p3-binary-dft = { path = "../p3/binary-dft" }
++p3-commit = { path = "../p3/commit" }
++p3-merkle-tree = { path = "../p3/merkle-tree" }
++p3-blake3 = { path = "../p3/blake3" }
++p3-symmetric = { path = "../p3/symmetric" }
++p3-challenger = { path = "../p3/challenger" }
++p3-matrix = { path = "../p3/matrix" }
++p3-maybe-rayon = { path = "../p3/maybe-rayon" }
++p3-util = { path = "../p3/util" }
+ rayon = "1.10"
+ blake3 = "1.5"
+ rand = "0.10"

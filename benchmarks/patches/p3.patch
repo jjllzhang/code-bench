@@ -1,0 +1,19 @@
+--- a/dft/src/radix_2_dit_parallel.rs
++++ b/dft/src/radix_2_dit_parallel.rs
+@@ -50,6 +50,16 @@
+ where
+     F: TwoAdicField + Ord,
+ {
++    /// Populate the same setup tables the one-dimensional LDE uses.
++    #[doc(hidden)]
++    pub fn prepare_coset_lde(&self, log_h: usize, added_bits: usize, shift: F) {
++        self.get_or_compute_inverse_twiddles(log_h);
++        let g_big = F::two_adic_generator(log_h + added_bits);
++        (0..(1usize << added_bits)).into_par_iter().for_each(|i| {
++            self.get_or_compute_coset_twiddles((log_h, g_big.exp_u64(i as u64) * shift));
++        });
++    }
++
+     fn get_or_compute_twiddles(&self, log_h: usize) -> Arc<VectorPair<F>> {
+         self.twiddles.get_or_compute(log_h, || {
+             let half_h = (1 << log_h) >> 1;

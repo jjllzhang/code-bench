@@ -1,0 +1,37 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -257,8 +257,13 @@
+     y_len: usize,
+     nnz_per_col: usize,
+ ) -> Vec<F> {
+-    (0..y_len)
+-        .map(|i| {
++    #[cfg(feature = "parallel")]
++    use rayon::prelude::*;
++    #[cfg(feature = "parallel")]
++    let indices = (0..y_len).into_par_iter();
++    #[cfg(not(feature = "parallel"))]
++    let indices = 0..y_len;
++    indices.map(|i| {
+             let mut acc = F::ZERO;
+             for j in 0..nnz_per_col {
+                 let e = &entries[i * nnz_per_col + j];
+--- a/src/commit/codes/brakedown.rs
++++ b/src/commit/codes/brakedown.rs
+@@ -65,9 +65,13 @@
+     }
+ 
+     fn apply(&self, message: &[F]) -> Vec<F> {
+-        self.offsets
+-            .windows(2)
+-            .map(|range| {
++        #[cfg(feature = "parallel")]
++        use rayon::prelude::*;
++        #[cfg(feature = "parallel")]
++        let ranges = self.offsets.par_windows(2);
++        #[cfg(not(feature = "parallel"))]
++        let ranges = self.offsets.windows(2);
++        ranges.map(|range| {
+                 self.edges[range[0]..range[1]]
+                     .iter()
+                     .map(|&(i, weight)| message[i] * weight)

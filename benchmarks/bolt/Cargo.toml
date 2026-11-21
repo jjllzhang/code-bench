@@ -1,0 +1,13 @@
+[package]
+name = "encoding-bolt"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bolt-rs = { path = "../source/bolt" }
+rand = "0.10"
+libc = "0.2"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
