@@ -46,7 +46,19 @@ python3 run.py
 python3 audit_raw.py --samples samples.csv
 ~~~
 
-For existing data, unpack the raw archive into this directory and copy the three track CSVs from ../results/tracks/ into results/ before running the audit. To measure a subset, use the executable and k options listed by the runner help. Each complete attempt is retained and skipped on repeat invocations. Temp logs from interrupted attempts are preserved under raw/incomplete-attempts/.
+For an audit of existing data, run these commands from `benchmarks/`.
+
+~~~sh
+(cd ../evidence && sha256sum -c raw-evidence.sha256)
+tar -xzf ../evidence/raw-evidence.tar.gz
+sha256sum -c ../evidence/raw-manifest.sha256
+mkdir -p results
+cp ../results/tracks/*.csv results/
+python3 audit_raw.py --samples samples.csv
+cmp samples.csv ../evidence/raw-samples.csv
+~~~
+
+To measure a subset, use the executable and k options listed by the runner help. Each complete attempt is retained and skipped on repeat invocations. Temp logs from interrupted attempts are preserved under raw/incomplete-attempts/. After a complete run, regenerate the evidence with `python3 export.py ../evidence`.
 
 ## Statuses
 

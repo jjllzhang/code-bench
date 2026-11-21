@@ -6,6 +6,7 @@ import csv
 import json
 import math
 from pathlib import Path
+import re
 from statistics import median
 from cases import grid
 
@@ -32,7 +33,7 @@ def expected_out(case):
 
 
 def close(observed, expected, name):
-    if abs(float(observed) - expected) > 1e-8:
+    if not math.isclose(float(observed), expected, rel_tol=0, abs_tol=1e-8):
         raise ValueError(f"{name}: {observed} != {expected}")
 
 
@@ -53,10 +54,20 @@ def audit(allow_pending):
         status = row["status"]
         checked[status] += 1
         arc = ROOT / "raw" / case["id"]
+        if case["status"]:
+            assert status == case["status"], (case["id"], case["status"], status)
+            assert not (arc / "exit.json").exists(), case["id"]
+        elif status == "PENDING":
+            if not allow_pending:
+                raise ValueError(f"Pending case: {case['id']}")
+        else:
+            assert (arc / "exit.json").is_file(), case["id"]
+            rss = re.search(r"Maximum resident set size \(kbytes\):\s+(\d+)",
+                            (arc / "resources.txt").read_text())
+            assert rss is not None, case["id"]
+            close(row["peak_rss_gib"], int(rss[1]) / 2**20, "RSS")
         if status != "OK":
             assert not row["encode_mean_ms"] and not row["encode_median_ms"]
-            if status == "PENDING" and not allow_pending:
-                raise ValueError(f"Pending case: {case['id']}")
             continue
         assert json.loads((arc / "exit.json").read_text())["returncode"] == 0
         actual = (arc / "stdout.log").read_text().splitlines()
@@ -72,6 +83,9 @@ def audit(allow_pending):
         reps = [line.split()[1:] for line in actual if line.startswith("ITER ")]
         assert [int(r[0]) for r in reps] == [0,1,2,3]
         assert all(int(r[2]) == m and math.isfinite(float(r[1])) and float(r[1]) > 0 for r in reps)
+        peak_minor = max(int(r[3]) for r in reps[1:])
+        timed_major = sum(int(r[4]) for r in reps[1:])
+        assert f"peak minor faults/sample={peak_minor}; timed major faults={timed_major}." in row["notes"]
         times = [float(r[1]) for r in reps[1:]]
         mean = math.fsum(times)/3
         close(row["encode_mean_ms"], mean, "mean")

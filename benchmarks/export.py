@@ -31,16 +31,18 @@ def summarize(rows, audit_counts, out):
         "# Single-polynomial encoding results", "",
         f"{len(timed)} completed points contribute {len(timed)*3} timed samples.",
         f"The full grid contains {len(rows)} points.", "",
-        "| Track | Measured | Domain limit | Unsupported | Interleaved | Memory bound/failure | Other |",
-        "|---|---:|---:|---:|---:|---:|---:|",
+        "| Track | Measured | Domain limit | Unsupported | Interleaved | Preflight memory bound | Runtime memory failure | Other |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for track, outcome in table_counts.items():
-        memory = sum(outcome[s] for s in ("OOM_LIMIT","HOST_MEMORY_LIMIT","OOM_SKIPPED"))
-        other = sum(outcome.values()) - memory - sum(outcome[s] for s in ("OK","DOMAIN_LIMIT","UNSUPPORTED_BACKEND","EXCLUDED_INTERLEAVED"))
+        runtime_memory = outcome["OOM_LIMIT"] + outcome["HOST_MEMORY_LIMIT"]
+        other = sum(outcome.values()) - runtime_memory - sum(
+            outcome[s] for s in ("OK","DOMAIN_LIMIT","UNSUPPORTED_BACKEND","EXCLUDED_INTERLEAVED","OOM_SKIPPED")
+        )
         lines.append(f"| {track} | {outcome['OK']} | {outcome['DOMAIN_LIMIT']} | {outcome['UNSUPPORTED_BACKEND']} | "
-                     f"{outcome['EXCLUDED_INTERLEAVED']} | {memory} | {other} |")
+                     f"{outcome['EXCLUDED_INTERLEAVED']} | {outcome['OOM_SKIPPED']} | {runtime_memory} | {other} |")
     lines += ["", "## Matched examples at rate 1/2", "",
-              "Times are the median of three samples. The rows link to full data grouped by code family.", "",
+              "Times are the median of three samples. The full data are [grouped by code family](../results/).", "",
               "| Field | log₂ K | Variant | Encode (ms) | Setup (ms) | Peak RSS (GiB) |",
               "|---|---:|---|---:|---:|---:|"]
     picks = [
@@ -55,13 +57,13 @@ def summarize(rows, audit_counts, out):
     ]
     by_kind = defaultdict(dict)
     for row in timed:
-        if row["actual_rate"] == "0.500000000000":
+        if 2 * int(row["input_elements"]) == int(row["codeword_elements"]):
             by_kind[(row["field"],row["code_family"],row["variant"])][int(row["k"])] = row
     for field, family, variant in picks:
         for k in (20,24,28,30):
             r=by_kind[field,family,variant].get(k)
             if r is not None:
-                lines.append(f"| {field} | {k} | {family} / {variant} | {float(r['encode_median_ms']):.3f} | "
+                lines.append(f"| {field} | {k} | [{family}](../results/{family}.md) / {variant} | {float(r['encode_median_ms']):.3f} | "
                              f"{float(r['setup_ms']):.3f} | {float(r['peak_rss_gib']):.3f} |")
     lines += ["", "## Reading the measurements", "",
               "- The timing columns measure the one-vector encoder call. Setup, input preparation, and commitment hashing have separate boundaries.",
@@ -70,7 +72,7 @@ def summarize(rows, audit_counts, out):
               "- Binary HyperFold uses its released additive-RS base code. The independent Binary QA implementation has its own rows.",
               "- The reference SIMD-Spielman targets encode columns of independent messages and are excluded.",
               "- Setup plus encoding RSS is reported for each process. Encoders with owned scratch may still incur minor faults in timed samples.",
-              "", "[Methods and source revisions](benchmarks/README.md)", ""]
+              "", "[Methods and source revisions](../benchmarks/README.md)", ""]
     (out/"REPORT.md").write_text("\n".join(lines))
     (out/"result-counts.json").write_text(json.dumps({"status_counts": dict(audit_counts),
           "by_track": {k:dict(v) for k,v in table_counts.items()},

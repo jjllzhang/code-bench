@@ -976,7 +976,6 @@ def load_rows(csv_paths: list[Path]) -> list[dict[str, str]]:
                 group_label, group_order = COMPLEXITY_ORDER.get(r["zoo_id"], ("Other Linear Codes", 99))
                 r["group_label"] = group_label
                 r["group_order"] = group_order
-                r["notes"] = (r.get("notes") or "").strip()
                 rows.append(r)
     return rows
 
@@ -1097,6 +1096,12 @@ def render_readme(rows: list[dict[str, str]], out_dir: Path, generated_at: str) 
     for s in sorted(st_counts):
         if s not in status_order:
             status_parts.append(f"`{st_counts[s]}` {s}")
+    evidence_links = "[Methods and reproduction commands](benchmarks/README.md)"
+    if (out_dir / "evidence" / "REPORT.md").is_file():
+        evidence_links += (
+            " · [Campaign summary](evidence/REPORT.md)"
+            " · [Raw timings and command logs](evidence/)"
+        )
 
     lines = [
         "# code-bench",
@@ -1104,6 +1109,8 @@ def render_readme(rows: list[dict[str, str]], out_dir: Path, generated_at: str) 
         "Benchmark archive for **1D single-polynomial linear code encoders** used in code-based polynomial commitment schemes (PCS), structured after [`pcs-bench`](https://github.com/jjllzhang/pcs-bench) with paired `<code_family>.md` + `<code_family>.csv` files under [`results/`](results/) and an interactive report at [`docs/index.html`](docs/index.html).",
         "",
         f"> **Snapshot Status** (`{generated_at}`): {' · '.join(status_parts)} (`{len(rows)}` total grid points).",
+        "",
+        evidence_links,
         "",
         "## Repository Structure",
         "",
@@ -1205,7 +1212,7 @@ def build(csv_dir: Path, out_dir: Path) -> None:
     # Load both parsed rows and raw track CSV payloads before touching out_dir
     # so in-place rebuilds (--csv-dir <out>/results/tracks --out-dir <out>) are safe.
     rows = load_rows(csv_files)
-    src_payloads = [(src.name, src.read_text(encoding="utf-8")) for src in csv_files]
+    src_payloads = [(src.name, src.read_bytes()) for src in csv_files]
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%MZ")
 
     by_family: dict[str, list[dict[str, str]]] = defaultdict(list)
@@ -1244,7 +1251,7 @@ def build(csv_dir: Path, out_dir: Path) -> None:
 
     # Write track CSVs into results/tracks/ from buffered payloads
     for name, content in src_payloads:
-        (tracks_dir / name).write_text(content, encoding="utf-8")
+        (tracks_dir / name).write_bytes(content)
 
     # Emit paired per-family CSV + MD matching pcs-bench
     for fam, sorted_frows, md_text in family_outputs:
