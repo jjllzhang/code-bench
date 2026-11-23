@@ -1,55 +1,57 @@
-# BaseFold Random Foldable Codes (r = 2)
+# BaseFold Random Foldable Codes Benchmark Results
 
-Single-polynomial 1D encoding benchmarks for `basefold` (Zoo #5; status summary: DOMAIN_LIMIT: 1, OK: 22, OOM_LIMIT: 1).
+Measurements of [plonkish_basefold](https://github.com/hadasz/plonkish_basefold) (commit `c29f0865`) random foldable codes (`r = 2`) initialized from a Reed–Solomon base code of message length `64`.
 
 ## Setup & Parameters
 
-- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`taskset -c 0-31`, `RAYON_NUM_THREADS=32`, `OMP_NUM_THREADS=32`); release build (`target-cpu=native`)
-- **Repositories / Revisions**: `plonkish_basefold@c29f08653121637b456e4705d901d078cd6fc668`
-- **Field(s)**: `goldilocks`, `m127`
-- **Message Lengths**: `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`)
-- **1D Geometry**: Single codeword (`nrows = 1`, `width = 1`, `log_batch_size = 0`; no interleaving, no 2D matrix reshape)
+- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`target-cpu=native`); `32T`.
+- **Field(s)**: Goldilocks (`16B`), M127.
+- **Base Code & Folding**: Message length `64` RS base code followed by `k - 6` binary folding rounds (`r = 2`) with random diagonal multipliers.
+- **Element Storage**: Both `M127` and `Goldilocks` use `plonkish_basefold`'s native 16-byte representation.
 
 ## Measurement Methodology
 
-- **Sampling**: 1 warmup + 3 serial measured runs; reports arithmetic mean and median.
-- **Timing Scope**: Measures the native 1D encoder call (`input_elements` -> `codeword_elements`) only; excludes setup (`setup_ms`), input generation, caller-buffer reset (for in-place entry points), correctness checks, and Merkle hashing/opening. Before timing, the driver pre-touches or reuses caller-owned buffers; output and temporary scratch buffers allocated internally by the encoder during the timed interval can still trigger page faults, and those times are included in the recorded measurements (per-row minor/major fault counts are logged in `results/basefold.csv` `notes`).
-- **Memory**. `Peak RSS` is whole-process peak resident memory (`GiB`), including setup.
+- **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
+- **Timing & Memory Scope**: `Encode` measures pure encoding time for `K = 2^k` input elements, excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
 
-| Variant | Field | Nominal Rate | Actual Rate | k | T | Setup (ms) | Mean Encode (ms) | Median Encode (ms) | Peak RSS (GiB) | Status |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| `rs64-rfc` | `m127` | `1/2` | 0.5000 | 20 | 32 | 395.12 | 138.114 | 139.048 | 0.230 | `OK` |
-| `rs64-rfc` | `m127` | `1/2` | 0.5000 | 22 | 32 | 1607.58 | 436.869 | 421.684 | 1.037 | `OK` |
-| `rs64-rfc` | `m127` | `1/2` | 0.5000 | 24 | 32 | 7137.49 | 1875.478 | 1876.162 | 4.219 | `OK` |
-| `rs64-rfc` | `m127` | `1/2` | 0.5000 | 26 | 32 | 26806.57 | 8336.013 | 8214.804 | 16.973 | `OK` |
-| `rs64-rfc` | `m127` | `1/2` | 0.5000 | 28 | 32 | 109451.88 | 42525.472 | 42268.924 | 67.975 | `OK` |
-| `rs64-rfc` | `m127` | `1/2` | 0.5000 | 30 | 32 | 478663.11 | 175858.640 | 175708.707 | 271.977 | `OK` |
-| `rs64-rfc` | `m127` | `1/4` | 0.2500 | 20 | 32 | 784.24 | 188.314 | 179.990 | 0.486 | `OK` |
-| `rs64-rfc` | `m127` | `1/4` | 0.2500 | 22 | 32 | 3389.72 | 815.162 | 793.772 | 2.035 | `OK` |
-| `rs64-rfc` | `m127` | `1/4` | 0.2500 | 24 | 32 | 14098.22 | 3571.384 | 3516.446 | 8.225 | `OK` |
-| `rs64-rfc` | `m127` | `1/4` | 0.2500 | 26 | 32 | 57771.10 | 15077.845 | 14844.303 | 32.977 | `OK` |
-| `rs64-rfc` | `m127` | `1/4` | 0.2500 | 28 | 32 | 231381.89 | 79169.185 | 79368.570 | 131.973 | `OK` |
-| `rs64-rfc` | `m127` | `1/4` | — | 30 | 32 | — | — | — | — | `DOMAIN_LIMIT` |
-| `rs64-rfc` | `goldilocks` | `1/2` | 0.5000 | 20 | 32 | 381.20 | 117.924 | 115.750 | 0.211 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/2` | 0.5000 | 22 | 32 | 1510.24 | 492.489 | 471.895 | 0.979 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/2` | 0.5000 | 24 | 32 | 6870.52 | 2111.523 | 2112.577 | 3.971 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/2` | 0.5000 | 26 | 32 | 27504.71 | 9397.751 | 9299.605 | 15.975 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/2` | 0.5000 | 28 | 32 | 110290.03 | 48213.057 | 47682.146 | 63.977 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/2` | 0.5000 | 30 | 32 | 461978.02 | 194032.512 | 193742.933 | 255.982 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/4` | 0.2500 | 20 | 32 | 751.65 | 227.840 | 220.682 | 0.459 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/4` | 0.2500 | 22 | 32 | 3245.97 | 996.560 | 985.890 | 1.910 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/4` | 0.2500 | 24 | 32 | 13957.95 | 4369.395 | 4372.868 | 7.725 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/4` | 0.2500 | 26 | 32 | 58312.41 | 21698.924 | 21283.420 | 30.975 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/4` | 0.2500 | 28 | 32 | 219036.88 | 109490.207 | 110202.642 | 123.965 | `OK` |
-| `rs64-rfc` | `goldilocks` | `1/4` | — | 30 | 32 | — | — | — | 399.969 | `OOM_LIMIT` |
+### RS-64 Random Foldable Code (r = 2) — Goldilocks (64-bit) (32T)
 
-## Notes & Boundaries
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 381.20 ms | 117.92 ms | 115.75 ms | 0.211 |
+| `1/2` | 22 | 1.51 s | 492.49 ms | 471.89 ms | 0.979 |
+| `1/2` | 24 | 6.87 s | 2.112 s | 2.113 s | 3.971 |
+| `1/2` | 26 | 27.50 s | 9.398 s | 9.300 s | 15.975 |
+| `1/2` | 28 | 110.29 s | 48.213 s | 47.682 s | 63.977 |
+| `1/2` | 30 | 461.98 s | 194.03 s | 193.74 s | 255.982 |
+| `1/4` | 20 | 751.65 ms | 227.84 ms | 220.68 ms | 0.459 |
+| `1/4` | 22 | 3.25 s | 996.56 ms | 985.89 ms | 1.910 |
+| `1/4` | 24 | 13.96 s | 4.369 s | 4.373 s | 7.725 |
+| `1/4` | 26 | 58.31 s | 21.699 s | 21.283 s | 30.975 |
+| `1/4` | 28 | 219.04 s | 109.49 s | 110.20 s | 123.965 |
+| `1/4` | 30 | — | — | — | — |
 
-- `rs64-rfc` (`goldilocks`, config rate `1/2`, `OK`): Original field representations (Goldilocks occupies 16 B) and RS base encoder. Input coefficients.
-- `rs64-rfc` (`goldilocks`, config rate `1/4`, `OK`): Original field representations (Goldilocks occupies 16 B) and RS base encoder. Input coefficients.
-- `rs64-rfc` (`goldilocks`, config rate `1/4`, `OOM_LIMIT`): Original field representations (Goldilocks occupies 16 B) and RS base encoder. Input coefficients. exit=134; see raw/prime_goldilocks_1d-basefold-rs64-rfc-goldilocks-30-4.
-- `rs64-rfc` (`m127`, config rate `1/2`, `OK`): Original field representations (Goldilocks occupies 16 B) and RS base encoder. Input coefficients.
-- `rs64-rfc` (`m127`, config rate `1/4`, `DOMAIN_LIMIT`): Original field representations (Goldilocks occupies 16 B) and RS base encoder. Input coefficients. Original AES-CTR32 table stream cannot emit 2^32 blocks.
-- `rs64-rfc` (`m127`, config rate `1/4`, `OK`): Original field representations (Goldilocks occupies 16 B) and RS base encoder. Input coefficients.
+### RS-64 Random Foldable Code (r = 2) — M127 (2^127 - 1) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 395.12 ms | 138.11 ms | 139.05 ms | 0.230 |
+| `1/2` | 22 | 1.61 s | 436.87 ms | 421.68 ms | 1.037 |
+| `1/2` | 24 | 7.14 s | 1.875 s | 1.876 s | 4.219 |
+| `1/2` | 26 | 26.81 s | 8.336 s | 8.215 s | 16.973 |
+| `1/2` | 28 | 109.45 s | 42.525 s | 42.269 s | 67.975 |
+| `1/2` | 30 | 478.66 s | 175.86 s | 175.71 s | 271.977 |
+| `1/4` | 20 | 784.24 ms | 188.31 ms | 179.99 ms | 0.486 |
+| `1/4` | 22 | 3.39 s | 815.16 ms | 793.77 ms | 2.035 |
+| `1/4` | 24 | 14.10 s | 3.571 s | 3.516 s | 8.225 |
+| `1/4` | 26 | 57.77 s | 15.078 s | 14.844 s | 32.977 |
+| `1/4` | 28 | 231.38 s | 79.169 s | 79.369 s | 131.973 |
+| `1/4` | 30 | — | — | — | — |
+
+## Notes
+
+- `Goldilocks` elements occupy 16 bytes in `plonkish_basefold` (compared with 8 bytes in Plonky3 and HyperFold).
+- At rate `1/4` and `k = 30`, Goldilocks hit the 420 GiB per-process memory cap, while M127 hit the upstream AES-CTR32 table block limit (`2^32` blocks).

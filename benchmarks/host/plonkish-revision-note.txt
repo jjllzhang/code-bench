@@ -1,1 +1,0 @@
-Older plonkish binary applies only to successful, unaffected BaseFold RFC and Blaze packed RAA samples. SDIG3 samples always use the tail-reset replacement. Discarded SDIG3 records are archived separately in the experiment directory.

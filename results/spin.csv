@@ -1,13 +1,13 @@
-table_id,zoo_id,code_family,variant,repo,field,field_bits,k,input_elements,input_bytes,nominal_rate,actual_rate,codeword_elements,threads,setup_ms,encode_mean_ms,encode_median_ms,peak_rss_gib,status,notes
-binary_1d,19,spin,imt,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,20,1048576,16777216,1/2,0.500000000000,2097152,1,63.994929000,12.707086333,12.697076000,0.107421875,OK,128-bit binary records. Stock forward single-codeword transform is serial. peak minor faults/sample=0; timed major faults=0. 
-binary_1d,19,spin,imt,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,22,4194304,67108864,1/2,0.500000000000,8388608,1,269.660261000,82.079427333,82.009212000,0.425781250,OK,128-bit binary records. Stock forward single-codeword transform is serial. peak minor faults/sample=0; timed major faults=0. 
-binary_1d,19,spin,imt,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,24,16777216,268435456,1/2,0.500000000000,33554432,1,1201.791688000,361.299804333,358.011845000,1.785156250,OK,128-bit binary records. Stock forward single-codeword transform is serial. peak minor faults/sample=0; timed major faults=0. 
-binary_1d,19,spin,imt,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,26,67108864,1073741824,1/2,0.500000000000,134217728,1,5027.167490000,1558.486021667,1558.247961000,7.134765625,OK,128-bit binary records. Stock forward single-codeword transform is serial. peak minor faults/sample=0; timed major faults=0. 
-binary_1d,19,spin,imt,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,28,268435456,4294967296,1/2,0.500000000000,536870912,1,22069.334874000,7047.477265333,7043.643791000,28.533203125,OK,128-bit binary records. Stock forward single-codeword transform is serial. peak minor faults/sample=32; timed major faults=0. 
-binary_1d,19,spin,imt,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,30,1073741824,17179869184,1/2,0.500000000000,2147483648,1,150433.749199000,39889.260061333,39880.074641000,114.126953125,OK,128-bit binary records. Stock forward single-codeword transform is serial. peak minor faults/sample=430734; timed major faults=0. 
-binary_1d,19,spin,packet,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,20,1048576,16777216,1/2,0.500000000000,2097152,1,36.711812000,8.028806667,7.997559000,0.101562500,OK,128-bit binary records. Stock forward single-codeword transform is serial. peak minor faults/sample=0; timed major faults=0. 
-binary_1d,19,spin,packet,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,22,4194304,67108864,1/2,0.500000000000,8388608,1,156.053985000,35.657173667,35.644977000,0.384765625,OK,128-bit binary records. Stock forward single-codeword transform is serial. peak minor faults/sample=0; timed major faults=0. 
-binary_1d,19,spin,packet,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,24,16777216,268435456,1/2,0.500000000000,33554432,1,642.688995000,146.979018667,147.001393000,1.539062500,OK,128-bit binary records. Stock forward single-codeword transform is serial. peak minor faults/sample=0; timed major faults=0. 
-binary_1d,19,spin,packet,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,26,67108864,1073741824,1/2,0.500000000000,134217728,1,2595.444277000,618.195135333,618.281607000,6.154296875,OK,128-bit binary records. Stock forward single-codeword transform is serial. peak minor faults/sample=8; timed major faults=0. 
-binary_1d,19,spin,packet,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,28,268435456,,1/2,,,1,,,,,DOMAIN_LIMIT,128-bit binary records. Stock forward single-codeword transform is serial. 32-bit byte route bounds.
-binary_1d,19,spin,packet,spin_codes@584a7fb654e824bf296aeb92ef7c6edd92e63fc2,block128,128,30,1073741824,,1/2,,,1,,,,,DOMAIN_LIMIT,128-bit binary records. Stock forward single-codeword transform is serial. 32-bit byte route bounds.
+variant,field,rate,actual_rate,k,threads,setup_ms,encode_mean_ms,encode_median_ms,peak_rss_gib,status
+imt,block128,1/2,0.500000000000,20,1,63.994929000,12.707086333,12.697076000,0.107421875,OK
+imt,block128,1/2,0.500000000000,22,1,269.660261000,82.079427333,82.009212000,0.425781250,OK
+imt,block128,1/2,0.500000000000,24,1,1201.791688000,361.299804333,358.011845000,1.785156250,OK
+imt,block128,1/2,0.500000000000,26,1,5027.167490000,1558.486021667,1558.247961000,7.134765625,OK
+imt,block128,1/2,0.500000000000,28,1,22069.334874000,7047.477265333,7043.643791000,28.533203125,OK
+imt,block128,1/2,0.500000000000,30,1,150433.749199000,39889.260061333,39880.074641000,114.126953125,OK
+packet,block128,1/2,0.500000000000,20,1,36.711812000,8.028806667,7.997559000,0.101562500,OK
+packet,block128,1/2,0.500000000000,22,1,156.053985000,35.657173667,35.644977000,0.384765625,OK
+packet,block128,1/2,0.500000000000,24,1,642.688995000,146.979018667,147.001393000,1.539062500,OK
+packet,block128,1/2,0.500000000000,26,1,2595.444277000,618.195135333,618.281607000,6.154296875,OK
+packet,block128,1/2,,28,1,,,,,DOMAIN_LIMIT
+packet,block128,1/2,,30,1,,,,,DOMAIN_LIMIT

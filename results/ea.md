@@ -1,79 +1,73 @@
-# Juxtaposed Expand–Accumulate (1D Explicit EA)
+# Explicit Expand–Accumulate (EA) Benchmark Results
 
-Single-polynomial 1D encoding benchmarks for `ea` (Zoo #7; status summary: OK: 18, OOM_SKIPPED: 18).
+Measurements of explicit sparse-matrix Expand–Accumulate encoders using the ERA explicit EA encoder and the [CRYPTO '24 EACode artifact](https://artifacts.iacr.org/crypto/2024/a10/).
 
 ## Setup & Parameters
 
-- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`taskset -c 0-31`, `RAYON_NUM_THREADS=32`, `OMP_NUM_THREADS=32`); release build (`target-cpu=native`)
-- **Repositories / Revisions**: `EACode CRYPTO’24 artifact`, `ERA local source snapshot`
-- **Field(s)**: `goldilocks`, `ristretto255`, `secp256k1`
-- **Message Lengths**: `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`)
-- **1D Geometry**: Single codeword (`nrows = 1`, `width = 1`, `log_batch_size = 0`; no interleaving, no 2D matrix reshape)
+- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`target-cpu=native`); `32T`.
+- **Field(s)**: Goldilocks, `secp256k1`, `Ristretto255`.
+- **Construction**: Expands a `2^k`-element message via an explicit sparse bipartite matrix `E` of size `N × 2^k`, followed by sequential accumulation.
+- **Rates**: `1/2` and `1/4`.
 
 ## Measurement Methodology
 
-- **Sampling**: 1 warmup + 3 serial measured runs; reports arithmetic mean and median.
-- **Timing Scope**: Measures the native 1D encoder call (`input_elements` -> `codeword_elements`) only; excludes setup (`setup_ms`), input generation, caller-buffer reset (for in-place entry points), correctness checks, and Merkle hashing/opening. Before timing, the driver pre-touches or reuses caller-owned buffers; output and temporary scratch buffers allocated internally by the encoder during the timed interval can still trigger page faults, and those times are included in the recorded measurements (per-row minor/major fault counts are logged in `results/ea.csv` `notes`).
-- **Memory**. `Peak RSS` is whole-process peak resident memory (`GiB`), including setup.
+- **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
+- **Timing & Memory Scope**: `Encode` measures pure encoding time for `K = 2^k` input elements, excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
 
-| Variant | Field | Nominal Rate | Actual Rate | k | T | Setup (ms) | Mean Encode (ms) | Median Encode (ms) | Peak RSS (GiB) | Status |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| `ea-explicit` | `secp256k1` | `1/2` | 0.5000 | 20 | 32 | 91465.74 | 1495.390 | 1496.377 | 17.803 | `OK` |
-| `ea-explicit` | `secp256k1` | `1/2` | 0.5000 | 22 | 32 | 400089.05 | 8929.561 | 8930.290 | 77.984 | `OK` |
-| `ea-explicit` | `secp256k1` | `1/2` | 0.5000 | 24 | 32 | 1778429.36 | 42983.968 | 43007.513 | 338.971 | `OK` |
-| `ea-explicit` | `secp256k1` | `1/2` | — | 26 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `secp256k1` | `1/2` | — | 28 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `secp256k1` | `1/2` | — | 30 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `secp256k1` | `1/4` | 0.2500 | 20 | 32 | 96443.25 | 1581.250 | 1583.514 | 18.715 | `OK` |
-| `ea-explicit` | `secp256k1` | `1/4` | 0.2500 | 22 | 32 | 417626.77 | 9396.916 | 9410.259 | 81.611 | `OK` |
-| `ea-explicit` | `secp256k1` | `1/4` | 0.2500 | 24 | 32 | 1838103.54 | 43662.596 | 43683.954 | 353.469 | `OK` |
-| `ea-explicit` | `secp256k1` | `1/4` | — | 26 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `secp256k1` | `1/4` | — | 28 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `secp256k1` | `1/4` | — | 30 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `eacode-official` | `ristretto255` | `1/2` | 0.5000 | 20 | 32 | 55101.22 | 1383.340 | 1383.104 | 17.809 | `OK` |
-| `eacode-official` | `ristretto255` | `1/2` | 0.5000 | 22 | 32 | 237966.96 | 8602.754 | 8616.211 | 77.994 | `OK` |
-| `eacode-official` | `ristretto255` | `1/2` | 0.5000 | 24 | 32 | 1046678.47 | 39823.152 | 39823.175 | 338.973 | `OK` |
-| `eacode-official` | `ristretto255` | `1/2` | — | 26 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `eacode-official` | `ristretto255` | `1/2` | — | 28 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `eacode-official` | `ristretto255` | `1/2` | — | 30 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `eacode-official` | `ristretto255` | `1/4` | 0.2500 | 20 | 32 | 58302.38 | 1457.507 | 1458.924 | 18.709 | `OK` |
-| `eacode-official` | `ristretto255` | `1/4` | 0.2500 | 22 | 32 | 251792.93 | 9011.968 | 9004.628 | 81.615 | `OK` |
-| `eacode-official` | `ristretto255` | `1/4` | 0.2500 | 24 | 32 | 1108526.45 | 41378.065 | 41376.893 | 353.471 | `OK` |
-| `eacode-official` | `ristretto255` | `1/4` | — | 26 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `eacode-official` | `ristretto255` | `1/4` | — | 28 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `eacode-official` | `ristretto255` | `1/4` | — | 30 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `goldilocks` | `1/2` | 0.5000 | 20 | 32 | 5385.34 | 137.953 | 138.016 | 8.869 | `OK` |
-| `ea-explicit` | `goldilocks` | `1/2` | 0.5000 | 22 | 32 | 22886.32 | 1369.412 | 1369.157 | 38.900 | `OK` |
-| `ea-explicit` | `goldilocks` | `1/2` | 0.5000 | 24 | 32 | 103173.41 | 7717.441 | 7711.502 | 169.104 | `OK` |
-| `ea-explicit` | `goldilocks` | `1/2` | — | 26 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `goldilocks` | `1/2` | — | 28 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `goldilocks` | `1/2` | — | 30 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `goldilocks` | `1/4` | 0.2500 | 20 | 32 | 5656.10 | 148.322 | 148.198 | 9.291 | `OK` |
-| `ea-explicit` | `goldilocks` | `1/4` | 0.2500 | 22 | 32 | 23988.08 | 1447.288 | 1447.300 | 40.658 | `OK` |
-| `ea-explicit` | `goldilocks` | `1/4` | 0.2500 | 24 | 32 | 107859.58 | 8011.912 | 8008.080 | 176.098 | `OK` |
-| `ea-explicit` | `goldilocks` | `1/4` | — | 26 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `goldilocks` | `1/4` | — | 28 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `ea-explicit` | `goldilocks` | `1/4` | — | 30 | 32 | — | — | — | — | `OOM_SKIPPED` |
+### Explicit Sparse-Matrix EA — Goldilocks (64-bit) (32T)
 
-## Notes & Boundaries
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 5.39 s | 137.95 ms | 138.02 ms | 8.869 |
+| `1/2` | 22 | 22.89 s | 1.369 s | 1.369 s | 38.900 |
+| `1/2` | 24 | 103.17 s | 7.717 s | 7.712 s | 169.104 |
+| `1/2` | 26 | — | — | — | — |
+| `1/2` | 28 | — | — | — | — |
+| `1/2` | 30 | — | — | — | — |
+| `1/4` | 20 | 5.66 s | 148.32 ms | 148.20 ms | 9.291 |
+| `1/4` | 22 | 23.99 s | 1.447 s | 1.447 s | 40.658 |
+| `1/4` | 24 | 107.86 s | 8.012 s | 8.008 s | 176.098 |
+| `1/4` | 26 | — | — | — | — |
+| `1/4` | 28 | — | — | — | — |
+| `1/4` | 30 | — | — | — | — |
 
-- `ea-explicit` (`goldilocks`, config rate `1/2`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 13416.0 GiB.
-- `ea-explicit` (`goldilocks`, config rate `1/2`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 3138.0 GiB.
-- `ea-explicit` (`goldilocks`, config rate `1/2`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 730.5 GiB.
-- `ea-explicit` (`goldilocks`, config rate `1/4`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 13864.0 GiB.
-- `ea-explicit` (`goldilocks`, config rate `1/4`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 3250.0 GiB.
-- `ea-explicit` (`goldilocks`, config rate `1/4`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 758.5 GiB.
-- `ea-explicit` (`secp256k1`, config rate `1/2`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 1464.0 GiB.
-- `ea-explicit` (`secp256k1`, config rate `1/2`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 26880.0 GiB.
-- `ea-explicit` (`secp256k1`, config rate `1/2`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 6288.0 GiB.
-- `ea-explicit` (`secp256k1`, config rate `1/4`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 1522.0 GiB.
-- `ea-explicit` (`secp256k1`, config rate `1/4`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 27808.0 GiB.
-- `ea-explicit` (`secp256k1`, config rate `1/4`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 6520.0 GiB.
-- `eacode-official` (`ristretto255`, config rate `1/2`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 1464.0 GiB.
-- `eacode-official` (`ristretto255`, config rate `1/2`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 26880.0 GiB.
-- `eacode-official` (`ristretto255`, config rate `1/2`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 6288.0 GiB.
-- `eacode-official` (`ristretto255`, config rate `1/4`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 1522.0 GiB.
-- `eacode-official` (`ristretto255`, config rate `1/4`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 27808.0 GiB.
-- `eacode-official` (`ristretto255`, config rate `1/4`, `OOM_SKIPPED`): Explicit matrix plus message/output lower bound 6520.0 GiB.
+### Explicit Sparse-Matrix EA — secp256k1 Fr (256-bit) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 91.47 s | 1.495 s | 1.496 s | 17.803 |
+| `1/2` | 22 | 400.09 s | 8.930 s | 8.930 s | 77.984 |
+| `1/2` | 24 | 1778.43 s | 42.984 s | 43.008 s | 338.971 |
+| `1/2` | 26 | — | — | — | — |
+| `1/2` | 28 | — | — | — | — |
+| `1/2` | 30 | — | — | — | — |
+| `1/4` | 20 | 96.44 s | 1.581 s | 1.584 s | 18.715 |
+| `1/4` | 22 | 417.63 s | 9.397 s | 9.410 s | 81.611 |
+| `1/4` | 24 | 1838.10 s | 43.663 s | 43.684 s | 353.469 |
+| `1/4` | 26 | — | — | — | — |
+| `1/4` | 28 | — | — | — | — |
+| `1/4` | 30 | — | — | — | — |
+
+### CRYPTO'24 EACode EA — Ristretto255 Fr (253-bit) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 55.10 s | 1.383 s | 1.383 s | 17.809 |
+| `1/2` | 22 | 237.97 s | 8.603 s | 8.616 s | 77.994 |
+| `1/2` | 24 | 1046.68 s | 39.823 s | 39.823 s | 338.973 |
+| `1/2` | 26 | — | — | — | — |
+| `1/2` | 28 | — | — | — | — |
+| `1/2` | 30 | — | — | — | — |
+| `1/4` | 20 | 58.30 s | 1.458 s | 1.459 s | 18.709 |
+| `1/4` | 22 | 251.79 s | 9.012 s | 9.005 s | 81.615 |
+| `1/4` | 24 | 1108.53 s | 41.378 s | 41.377 s | 353.471 |
+| `1/4` | 26 | — | — | — | — |
+| `1/4` | 28 | — | — | — | — |
+| `1/4` | 30 | — | — | — | — |
+
+## Notes
+
+- Explicitly storing the sparse matrix `E` requires memory growing super-linearly with `k` (~730 GiB+ lower bound at `k = 26` for Goldilocks, ~1,464 GiB+ for 256-bit curves), so `k >= 26` could not run within the host's 503 GiB RAM.
