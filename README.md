@@ -6,16 +6,16 @@ Benchmark archive for linear code encoders used in code-based polynomial commitm
 
 ```text
 code-bench/
-├── README.md        # Overview tables and index of benchmarked code families
-├── TEMPLATE.md      # Markdown template for adding new code families
+├── README.md        # Overview and index of benchmarked code families
+├── TEMPLATE.md      # Template for benchmark results
 ├── docs/
-│   └── index.html   # Interactive comparison charts and tables
+│   └── index.html   # Interactive comparison page
 └── results/         # Paired <code_family>.md and <code_family>.csv files
 ```
 
 ## Encoding Efficiency Overview
 
-Tables below report **median** encoding time for `K = 2^k` input elements across 3 measured runs on a 32-core AMD EPYC 9754 (`target-cpu=native`), excluding setup. `—` denotes a domain or memory limit; `1T` marks single-threaded implementations (all others use 32 threads).
+Median encoding time for `K = 2^k` input elements on an AMD EPYC 9754 (`32T`, or `1T` where marked). `—` denotes a field domain or memory limit.
 
 ### Goldilocks (64-bit) — Rate 1/2
 
@@ -36,7 +36,7 @@ Tables below report **median** encoding time for `K = 2^k` input elements across
 | [Brakedown](results/brakedown.md) (`plonkish`, `ρ=0.657`, `1T`, 16B) | 228.5 ms | 1.28 s | 8.27 s | 39.67 s | 166.28 s | — |
 | [EA](results/ea.md) (explicit sparse) | 138.0 ms | 1.37 s | 7.71 s | — | — | — |
 
-> Notes: `plonkish` (`BaseFold` and `plonkish-sdig3`) uses 16 B/element vs. 8 B/element in the other Goldilocks encoders. `ERA` uses a `1.05×` inner Brakedown code (`ρ ≈ 0.476`). Missing entries (`—`) at larger `k` reflect host/process memory limits (420–503 GiB).
+> Notes: `plonkish` (`BaseFold` and `plonkish-sdig3`) uses 16 B/element vs. 8 B/element in the other Goldilocks encoders. `ERA` uses a `1.05×` inner Brakedown code (`ρ ≈ 0.476`). Missing entries (`—`) at larger `k` reflect memory limits (420–503 GiB).
 
 ### Goldilocks (64-bit) — Rate 1/4
 
@@ -164,7 +164,6 @@ Full tables including `Setup` time, arithmetic mean and median `Encode` time, `P
 ## Conventions
 
 - Each code family lives in `results/<code_family>.md` (setup, parameters, summary tables, notes) and `results/<code_family>.csv` (timings and memory).
-- **Input & Rates**: Each entry encodes `K = 2^k` input elements into `N = K / ρ` codeword elements. `ERA` and `Bolt` include inner-code redundancy (`ρ ≈ 0.476 / 0.238` and `ρ = 0.800 / 0.667`, respectively).
-- **Timing & Memory**: `Setup` (parameter/graph generation) and `Encode` (encoding `K` elements, excluding input generation) are measured across 1 warmup + 3 runs on an AMD EPYC 9754 (503 GiB RAM, 32 pinned cores, `target-cpu=native`). `Peak RSS` reports process peak resident memory in GiB.
-- **Element Width & Parallelism**: `plonkish_basefold` stores Goldilocks elements in 16 bytes (vs. 8 bytes in Plonky3 and HyperFold); `Lightning` takes `u64` inputs with `BN254` parity symbols; `SPIN` operates on 128-bit blocks; `bolt-rs` RS, `lcpc`, `plonkish-sdig3`, `Lightning`, `SPIN`, and `EACode` RAA execute single-threaded (`1T`).
-- Use [`TEMPLATE.md`](TEMPLATE.md) when adding new code families. Runner scripts and raw logs from the initial sweep remain in commit [`9038389`](https://github.com/jjllzhang/code-bench/tree/9038389e4e7c10fe90ee59affcb2647142114cfa).
+- CSV timings use milliseconds (`setup_ms`, `encode_mean_ms`, `encode_median_ms`) and memory uses `peak_rss_gib` (GiB).
+- Equal `k` across different fields does not imply equal input byte sizes: `plonkish_basefold` stores Goldilocks elements in 16 bytes (vs. 8 bytes in Plonky3 and HyperFold), `Lightning` maps `u64` inputs to `BN254` parities, and `SPIN` operates on 128-bit blocks.
+- `ERA` (`ρ ≈ 0.476 / 0.238`) and `Bolt` (`ρ = 0.800 / 0.667`) include inner-code redundancy in their actual rates; `1T` marks single-threaded implementations.
