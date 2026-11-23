@@ -147,7 +147,7 @@ footer p{margin:0}
       </div>
     </div>
     <p class="lead">
-      Encoding time across 13 linear code families for message lengths <code>K = 2^k</code> (<code>k ∈ {20, 22, 24, 26, 28, 30}</code>). Median and mean timings from 3 measured runs after 1 warmup (<code>target-cpu=native</code>), excluding setup and input generation.
+      Encoding time across 13 linear code families for message lengths <code>K = 2^k</code> (<code>k ∈ {20, 22, 24, 26, 28, 30}</code>). Median and mean timings on an AMD EPYC 9754 (<code>32T</code>, or <code>1T</code> where marked), excluding setup.
     </p>
   </header>
 
@@ -214,7 +214,7 @@ footer p{margin:0}
   <div id="tablesRoot"></div>
 
   <footer>
-    <p><strong>Methodology</strong>: Timings report median encoding time (mean shown on hover and in detail views) on an AMD EPYC 9754 (503 GiB RAM, 32 pinned cores). <code>Setup</code> is timed separately; <code>Peak RSS</code> is process-wide peak memory.</p>
+    <p><strong>Methodology</strong>: Median encoding time across 3 measured runs after 1 warmup on an AMD EPYC 9754 (503 GiB RAM, 32 cores). <code>Setup</code> is timed separately; <code>Peak RSS</code> is process peak memory.</p>
     <p><strong>Notes</strong>: Rank comparisons group by field, exact code rate <code>K/N</code>, and length <code>K</code>. <code>plonkish_basefold</code> uses 16-byte Goldilocks elements (vs. 8-byte in Plonky3/HyperFold), <code>ERA</code> (<code>ρ ≈ 0.476 / 0.238</code>) and <code>Bolt</code> (<code>ρ = 0.800 / 0.667</code>) include inner-code overhead, and <code>1T</code> marks single-threaded implementations.</p>
   </footer>
 </div>
