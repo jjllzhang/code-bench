@@ -1,8 +1,8 @@
 # code-bench
 
-Benchmark archive for **1D single-polynomial linear code encoders** used in code-based polynomial commitment schemes (PCS), structured after [`pcs-bench`](https://github.com/jjllzhang/pcs-bench).
+Benchmark archive for **linear code encoders** used in code-based polynomial commitment schemes (PCS), structured after [`pcs-bench`](https://github.com/jjllzhang/pcs-bench).
 
-Each benchmark encodes a single message vector of `K = 2^k` field elements (`k ∈ {20, 22, 24, 26, 28, 30}`) into one codeword (no interleaving or 2D matrix reshaping). Interactive comparison charts and filterable tables are available in [`docs/index.html`](docs/index.html).
+Each benchmark measures the encoding time of a message vector of length `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`), excluding interleaved and 2D matrix-reshaped codes. Interactive comparison charts and filterable tables are available in [`docs/index.html`](docs/index.html).
 
 ## Repository Structure
 
@@ -17,7 +17,7 @@ code-bench/
 
 ## Encoding Efficiency Overview
 
-Tables below report **median** pure encoding time across 3 measured runs on a 32-core AMD EPYC 9754 (`target-cpu=native`), excluding setup/graph generation and hashing. `—` denotes a field domain or memory limit; `1T` marks single-threaded reference kernels (all others use 32 threads).
+Tables below report **median** pure encoding time across 3 measured runs on a 32-core AMD EPYC 9754 (`target-cpu=native`), excluding setup/graph generation and hashing. `—` denotes a field domain or memory limit; `1T` marks single-threaded reference implementations (all others use 32 threads).
 
 ### Goldilocks (64-bit) — Rate 1/2
 
@@ -152,8 +152,8 @@ Full tables including `Setup` time, arithmetic mean and median `Encode` time, `P
 
 ## Conventions & Comparability Notes
 
-- **1D Single-Polynomial Scope**: Every row encodes a single vector of `K = 2^k` input symbols into one codeword of length `N = K / ρ`. Interleaved codes, block-RS, 2D tensor-product codes, and column-batched `SIMD-Spielman` are excluded.
+- **Scope**: Each entry encodes a vector of `K = 2^k` input symbols into a codeword of length `N = K / ρ`. Interleaved codes, block-RS, 2D tensor-product codes, and column-batched `SIMD-Spielman` are excluded.
 - **Timing & Memory Boundary**: `Encode` covers the encoder call alone (1 warmup + 3 serial measured runs; AMD EPYC 9754, 503 GiB RAM, 32 pinned cores, `target-cpu=native`), excluding parameter/graph precomputation (`Setup`), input generation, and hashing. `Peak RSS` measures whole-process peak resident memory.
 - **Representation & Parallelism**: `plonkish_basefold` stores Goldilocks elements in 16 bytes (vs. 8 bytes in Plonky3/HyperFold); `Lightning` uses `u64` inputs with `BN254` parities; `SPIN` operates on 128-bit blocks; `bolt-rs` RS, `lcpc`, `plonkish-sdig3`, `Lightning`, `SPIN`, and `EACode` RAA execute single-threaded (`1T`).
 - **Security Outside Scope**: These measurements capture encoding speed and memory only; minimum distance, query complexity, and PCS security are not equated across families.
-- **Reproducibility Archive**: Benchmark harnesses, upstream patches, and raw execution logs from the campaign are preserved in Git history at commit [`9038389`](https://github.com/jjllzhang/code-bench/tree/9038389e4e7c10fe90ee59affcb2647142114cfa). Use [`TEMPLATE.md`](TEMPLATE.md) when adding new code families.
+- **Reproducibility**: Benchmark scripts, upstream patches, and raw execution logs from the campaign are preserved in Git history at commit [`9038389`](https://github.com/jjllzhang/code-bench/tree/9038389e4e7c10fe90ee59affcb2647142114cfa). Use [`TEMPLATE.md`](TEMPLATE.md) when adding new code families.

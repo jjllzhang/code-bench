@@ -7,12 +7,12 @@ Measurements of [spin_codes](https://github.com/ladnir/spin_codes) (commit `584a
 - **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`target-cpu=native`); `1T`.
 - **Field(s)**: 128-bit binary blocks.
 - **Input Unit**: `2^k` 128-bit binary blocks (`block128`), fixed rate `1/2`.
-- **Execution**: Upstream forward single-codeword transform is serial (`1T`).
+- **Execution**: Upstream forward transform is serial (`1T`).
 
 ## Measurement Methodology
 
 - **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
-- **Timing & Memory Scope**: `Encode` measures single-polynomial 1D encoding (`K = 2^k` input elements) excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Timing & Memory Scope**: `Encode` measures pure encoding time for `K = 2^k` input elements, excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
 - **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results

@@ -1,6 +1,6 @@
 # Binary Additive Reed–Solomon Benchmark Results
 
-Measurements of additive-NTT Reed–Solomon encoders over binary tower fields: [Plonky3](https://github.com/Plonky3/Plonky3) (`p3-binary-dft`, commit `0d803737`) LCH14 and polynomial-basis encoders (`32T`), alongside [bolt-rs](https://github.com/bcc-research/bolt-rs) (commit `3832e47b`) single-codeword RS (`1T`).
+Measurements of additive-NTT Reed–Solomon encoders over binary tower fields: [Plonky3](https://github.com/Plonky3/Plonky3) (`p3-binary-dft`, commit `0d803737`) LCH14 and polynomial-basis encoders (`32T`), alongside [bolt-rs](https://github.com/bcc-research/bolt-rs) (commit `3832e47b`) (`1T`).
 
 ## Setup & Parameters
 
@@ -8,12 +8,12 @@ Measurements of additive-NTT Reed–Solomon encoders over binary tower fields: [
 - **Field(s)**: `GF(2^32)`, `GF(2^64)`, `GF(2^128)`.
 - **`lch`**: Plonky3 Lin–Chung–Han additive NTT (`GF(2^32)`, `GF(2^64)`, `GF(2^128)`).
 - **`polybasis`**: Plonky3 `PolyBasisNtt` (supports `GF(2^128)` only).
-- **`bolt-rs`**: `bolt-rs` `ReedSolomonEncoding` single-codeword kernel (serial `1T` execution).
+- **`bolt-rs`**: `bolt-rs` `ReedSolomonEncoding` encoder (serial `1T` execution).
 
 ## Measurement Methodology
 
 - **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
-- **Timing & Memory Scope**: `Encode` measures single-polynomial 1D encoding (`K = 2^k` input elements) excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Timing & Memory Scope**: `Encode` measures pure encoding time for `K = 2^k` input elements, excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
 - **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
@@ -105,5 +105,5 @@ Measurements of additive-NTT Reed–Solomon encoders over binary tower fields: [
 
 ## Notes
 
-- `bolt-rs` single-codeword RS executes on `1` thread even under 32-core affinity, whereas Plonky3 `lch` and `polybasis` parallelize across `32` threads.
+- `bolt-rs` RS executes on `1` thread under 32-core affinity, whereas Plonky3 `lch` and `polybasis` parallelize across `32` threads.
 - Plonky3 `PolyBasisNtt` only implements `GF(2^128)` in upstream commit `0d803737`.

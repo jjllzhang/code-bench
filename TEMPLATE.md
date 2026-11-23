@@ -1,6 +1,6 @@
 # <Code Family> Benchmark Results
 
-Measurements of [<Implementation Name>](<repo-url>) for single-polynomial 1D encoding over message lengths `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`).
+Measurements of [<Implementation Name>](<repo-url>) over message lengths `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`).
 
 ## Setup & Parameters
 
@@ -11,7 +11,7 @@ Measurements of [<Implementation Name>](<repo-url>) for single-polynomial 1D enc
 ## Measurement Methodology
 
 - **Sampling**: 1 warmup followed by 3 serial runs; reports arithmetic mean and median encoding time.
-- **Timing & Memory Scope**: `Encode` measures single-polynomial 1D encoding (`K = 2^k` input elements) excluding setup (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Timing & Memory Scope**: `Encode` measures pure encoding time for `K = 2^k` input elements, excluding setup (`Setup`), input generation, and hashing. `Peak RSS` is process peak resident memory (GiB).
 - **Missing Values**: `—` denotes an unmeasured configuration (e.g., finite-field domain bound or memory limit).
 
 ## Results

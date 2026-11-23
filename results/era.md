@@ -1,6 +1,6 @@
 # ERA (Encode–Repeat–Accumulate) Benchmark Results
 
-Measurements of the ERA (`Encode–Repeat–Accumulate`) 1D encoder over Goldilocks and `secp256k1` scalar fields.
+Measurements of the ERA (`Encode–Repeat–Accumulate`) encoder over Goldilocks and `secp256k1` scalar fields.
 
 ## Setup & Parameters
 
@@ -12,7 +12,7 @@ Measurements of the ERA (`Encode–Repeat–Accumulate`) 1D encoder over Goldilo
 ## Measurement Methodology
 
 - **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
-- **Timing & Memory Scope**: `Encode` measures single-polynomial 1D encoding (`K = 2^k` input elements) excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Timing & Memory Scope**: `Encode` measures pure encoding time for `K = 2^k` input elements, excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
 - **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results

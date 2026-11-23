@@ -1,6 +1,6 @@
 # Reed–Solomon (Multiplicative NTT Coset LDE) Benchmark Results
 
-Measurements of [Plonky3](https://github.com/Plonky3/Plonky3) (`p3-dft` `Radix2DitParallel`, commit `0d803737`) performing single-polynomial multiplicative NTT coset low-degree extension from subgroup evaluations.
+Measurements of [Plonky3](https://github.com/Plonky3/Plonky3) (`p3-dft` `Radix2DitParallel`, commit `0d803737`) multiplicative NTT coset low-degree extension from subgroup evaluations.
 
 ## Setup & Parameters
 
@@ -12,7 +12,7 @@ Measurements of [Plonky3](https://github.com/Plonky3/Plonky3) (`p3-dft` `Radix2D
 ## Measurement Methodology
 
 - **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
-- **Timing & Memory Scope**: `Encode` measures single-polynomial 1D encoding (`K = 2^k` input elements) excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Timing & Memory Scope**: `Encode` measures pure encoding time for `K = 2^k` input elements, excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
 - **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
