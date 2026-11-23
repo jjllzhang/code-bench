@@ -1,23 +1,21 @@
 # code-bench
 
-Benchmark archive for **linear code encoders** used in code-based polynomial commitment schemes (PCS), structured after [`pcs-bench`](https://github.com/jjllzhang/pcs-bench).
-
-Each benchmark measures the encoding time of a message vector of length `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`), excluding interleaved and 2D matrix-reshaped codes. Interactive comparison charts and filterable tables are available in [`docs/index.html`](docs/index.html).
+Benchmark archive for linear code encoders used in code-based polynomial commitment schemes (PCS), structured as paired `<code_family>.md` + `<code_family>.csv` files under [`results/`](results/).
 
 ## Repository Structure
 
 ```text
 code-bench/
-├── README.md        # Cross-code comparison overview and family index
-├── TEMPLATE.md      # Markdown template for adding new linear code benchmarks
+├── README.md        # Overview tables and index of benchmarked code families
+├── TEMPLATE.md      # Markdown template for adding new code families
 ├── docs/
-│   └── index.html   # Self-contained interactive comparison viewer
+│   └── index.html   # Interactive comparison charts and tables
 └── results/         # Paired <code_family>.md and <code_family>.csv files
 ```
 
 ## Encoding Efficiency Overview
 
-Tables below report **median** pure encoding time across 3 measured runs on a 32-core AMD EPYC 9754 (`target-cpu=native`), excluding setup/graph generation and hashing. `—` denotes a field domain or memory limit; `1T` marks single-threaded reference implementations (all others use 32 threads).
+Tables below report **median** encoding time for `K = 2^k` input elements across 3 measured runs on a 32-core AMD EPYC 9754 (`target-cpu=native`), excluding setup. `—` denotes a domain or memory limit; `1T` marks single-threaded implementations (all others use 32 threads).
 
 ### Goldilocks (64-bit) — Rate 1/2
 
@@ -102,7 +100,7 @@ Tables below report **median** pure encoding time across 3 measured runs on a 32
 | [Binary HyperFold](results/binary-hyperfold.md) (`r=4`, RS) | 43.8 ms | 132.1 ms | 637.6 ms | 2.83 s | 11.90 s | 39.24 s |
 | [Binary HyperFold](results/binary-hyperfold.md) (`r=2`, RS) | 66.0 ms | 209.6 ms | 887.5 ms | 3.60 s | 15.94 s | 57.25 s |
 
-> Notes: `SPIN` (`128-bit` binary blocks, `1T` serial) and `QA` mixed subfield-to-extension encoders (`GF(2^32) -> GF(2^128)`, `GF(2^64) -> GF(2^128)`) are reported in [spin.md](results/spin.md) and [qa.md](results/qa.md).
+> Notes: `SPIN` (`128-bit` binary blocks, `1T`) and `QA` mixed subfield-to-extension encoders (`GF(2^32) -> GF(2^128)`, `GF(2^64) -> GF(2^128)`) are reported in [spin.md](results/spin.md) and [qa.md](results/qa.md).
 
 ### Binary `GF(2^128)` — Rate 1/4
 
@@ -130,6 +128,19 @@ Tables below report **median** pure encoding time across 3 measured runs on a 32
 | [BaseFold](results/basefold.md) (`r=2` RFC) | 139.0 ms | 421.7 ms | 1.88 s | 8.21 s | 42.27 s | 175.71 s |
 | [Brakedown](results/brakedown.md) (`plonkish`, `ρ=0.657`, `1T`) | 238.2 ms | 1.33 s | 8.34 s | 39.94 s | 169.12 s | — |
 
+### `M127` (127-bit Prime) — Rate 1/4
+
+| Code / Variant | `k=20` | `k=22` | `k=24` | `k=26` | `k=28` | `k=30` |
+|---|---:|---:|---:|---:|---:|---:|
+| [HyperFold](results/hyperfold.md) (`r=8`, QA) | 18.2 ms | 62.1 ms | 283.1 ms | 1.18 s | 5.20 s | 19.97 s |
+| [HyperFold](results/hyperfold.md) (`r=4`, QA) | 20.6 ms | 87.5 ms | 392.8 ms | 1.73 s | 7.56 s | 28.60 s |
+| [HyperFold](results/hyperfold.md) (`r=8`, RS) | 56.5 ms | 146.4 ms | 449.9 ms | 3.90 s | 10.53 s | 30.51 s |
+| [HyperFold](results/hyperfold.md) (`r=4`, RS) | 30.0 ms | 130.1 ms | 559.0 ms | 2.39 s | 10.25 s | 39.53 s |
+| [HyperFold](results/hyperfold.md) (`r=2`, QA) | 25.4 ms | 130.3 ms | 605.7 ms | 2.86 s | 13.23 s | 48.64 s |
+| [Systematic QA](results/qa.md) (packed WHT) | 19.3 ms | 79.0 ms | 520.7 ms | 2.60 s | 11.42 s | 57.86 s |
+| [HyperFold](results/hyperfold.md) (`r=2`, RS) | 34.3 ms | 173.6 ms | 771.2 ms | 3.54 s | 15.74 s | 59.22 s |
+| [BaseFold](results/basefold.md) (`r=2` RFC) | 180.0 ms | 793.8 ms | 3.52 s | 14.84 s | 79.37 s | — |
+
 ## Benchmarked Code Families
 
 Full tables including `Setup` time, arithmetic mean and median `Encode` time, `Peak RSS`, and additional native fields (`M127`, `BabyBear`, `Ft127`, `secp256k1`, `Ristretto255`, `BN254`, `GF(2^16)`, `GF(2^64)`, `block128`):
@@ -150,10 +161,10 @@ Full tables including `Setup` time, arithmetic mean and median `Encode` time, `P
 | Lightning | `ldpc-brakedown` (`1T`) | `u64 -> BN254 Fr` | `1/2`, native (`0.61–0.78`) | 20–30 | 1T | [md](results/lightning.md) · [csv](results/lightning.csv) |
 | SPIN | `imt`, `packet` (`1T`) | 128-bit binary blocks | `1/2` | 20–30 (`packet`: 26) | 1T | [md](results/spin.md) · [csv](results/spin.csv) |
 
-## Conventions & Comparability Notes
+## Conventions
 
-- **Scope**: Each entry encodes a vector of `K = 2^k` input symbols into a codeword of length `N = K / ρ`. Interleaved codes, block-RS, 2D tensor-product codes, and column-batched `SIMD-Spielman` are excluded.
-- **Timing & Memory Boundary**: `Encode` covers the encoder call alone (1 warmup + 3 serial measured runs; AMD EPYC 9754, 503 GiB RAM, 32 pinned cores, `target-cpu=native`), excluding parameter/graph precomputation (`Setup`), input generation, and hashing. `Peak RSS` measures whole-process peak resident memory.
-- **Representation & Parallelism**: `plonkish_basefold` stores Goldilocks elements in 16 bytes (vs. 8 bytes in Plonky3/HyperFold); `Lightning` uses `u64` inputs with `BN254` parities; `SPIN` operates on 128-bit blocks; `bolt-rs` RS, `lcpc`, `plonkish-sdig3`, `Lightning`, `SPIN`, and `EACode` RAA execute single-threaded (`1T`).
-- **Security Outside Scope**: These measurements capture encoding speed and memory only; minimum distance, query complexity, and PCS security are not equated across families.
-- **Reproducibility**: Benchmark scripts, upstream patches, and raw execution logs from the campaign are preserved in Git history at commit [`9038389`](https://github.com/jjllzhang/code-bench/tree/9038389e4e7c10fe90ee59affcb2647142114cfa). Use [`TEMPLATE.md`](TEMPLATE.md) when adding new code families.
+- Each code family lives in `results/<code_family>.md` (setup, parameters, summary tables, notes) and `results/<code_family>.csv` (timings and memory).
+- **Input & Rates**: Each entry encodes `K = 2^k` input elements into `N = K / ρ` codeword elements. `ERA` and `Bolt` include inner-code redundancy (`ρ ≈ 0.476 / 0.238` and `ρ = 0.800 / 0.667`, respectively).
+- **Timing & Memory**: `Setup` (parameter/graph generation) and `Encode` (encoding `K` elements, excluding input generation) are measured across 1 warmup + 3 runs on an AMD EPYC 9754 (503 GiB RAM, 32 pinned cores, `target-cpu=native`). `Peak RSS` reports process peak resident memory in GiB.
+- **Element Width & Parallelism**: `plonkish_basefold` stores Goldilocks elements in 16 bytes (vs. 8 bytes in Plonky3 and HyperFold); `Lightning` takes `u64` inputs with `BN254` parity symbols; `SPIN` operates on 128-bit blocks; `bolt-rs` RS, `lcpc`, `plonkish-sdig3`, `Lightning`, `SPIN`, and `EACode` RAA execute single-threaded (`1T`).
+- Use [`TEMPLATE.md`](TEMPLATE.md) when adding new code families. Runner scripts and raw logs from the initial sweep remain in commit [`9038389`](https://github.com/jjllzhang/code-bench/tree/9038389e4e7c10fe90ee59affcb2647142114cfa).

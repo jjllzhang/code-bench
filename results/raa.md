@@ -1,6 +1,6 @@
 # Repeat–Accumulate–Accumulate (RAA) Benchmark Results
 
-Measurements of Repeat–Accumulate–Accumulate (RAA) encoders across prime and binary fields: `raa-unweighted` (ERA reference implementation), [bolt-rs](https://github.com/bcc-research/bolt-rs) (`3832e47b`), [plonkish_basefold](https://github.com/hadasz/plonkish_basefold) (`c29f0865`) 64-bit packed binary RAA, and the [CRYPTO '24 EACode artifact](https://artifacts.iacr.org/crypto/2024/a10/).
+Measurements of Repeat–Accumulate–Accumulate (RAA) encoders across prime and binary fields: `raa-unweighted` (ERA codebase), [bolt-rs](https://github.com/bcc-research/bolt-rs) (`3832e47b`), [plonkish_basefold](https://github.com/hadasz/plonkish_basefold) (`c29f0865`) 64-bit packed binary RAA, and the [CRYPTO '24 EACode artifact](https://artifacts.iacr.org/crypto/2024/a10/).
 
 ## Setup & Parameters
 
@@ -9,12 +9,12 @@ Measurements of Repeat–Accumulate–Accumulate (RAA) encoders across prime and
 - **`raa-unweighted`**: Repeat-permute-accumulate pipeline over Goldilocks (`8B`) and `secp256k1` Fr (`32B`).
 - **`bolt-raa`**: Binary RAA over `GF(2^32)` and `GF(2^128)`.
 - **`blaze-packed-u64`**: 64-bit word-packed binary RAA (`bf64` packed records, XOR accumulation rather than field multiplication).
-- **`eacode-official`**: Official CRYPTO '24 `EACode` RAA implementation over `Ristretto255` (`1T` serial).
+- **`eacode-official`**: Official CRYPTO '24 `EACode` RAA implementation over `Ristretto255` (`1T`).
 
 ## Measurement Methodology
 
-- **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
-- **Timing & Memory Scope**: `Encode` measures pure encoding time for `K = 2^k` input elements, excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Sampling**: 1 warmup followed by 3 measured runs per configuration; reports both arithmetic mean and median encoding time.
+- **Timing Scope**: `Encode` measures encoding time for `K = 2^k` input elements, excluding `Setup` and input generation. `Peak RSS` is process peak resident memory (GiB).
 - **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
