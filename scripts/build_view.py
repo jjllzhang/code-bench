@@ -24,7 +24,7 @@ COLUMNS = [
     "table_id", "zoo_id", "code_family", "variant", "repo", "field", "field_bits",
     "k", "input_elements", "input_bytes", "nominal_rate", "actual_rate",
     "codeword_elements", "threads", "setup_ms", "encode_mean_ms", "encode_median_ms",
-    "throughput_melem_s", "throughput_gib_s", "peak_rss_gib", "status", "notes",
+    "peak_rss_gib", "status", "notes",
 ]
 
 TRACK_META = {
@@ -248,13 +248,11 @@ footer p{margin:0}
       </div>
     </div>
     <p class="lead">
-      Single-polynomial 1D encoding throughput and latency for messages of length <code>K = 2^k</code> (<code>k ∈ {20, 22, 24, 26, 28, 30}</code>), excluding interleaved and 2D matrix-reshaped codes. Pinned 32 cores (AMD EPYC 9754, 503 GiB RAM), 1 warmup + 3 serial measured runs. Excludes setup (<code>setup_ms</code>), input generation, caller-buffer reset, correctness checks, and Merkle hashing. Drivers pre-touch or reuse caller-owned buffers before timing, while encoder-allocated output and scratch space inside the timed call may still incur page faults whose time is included (logged per row in Notes).
+      Single-polynomial 1D encoding time for messages of length <code>K = 2^k</code> (<code>k ∈ {20, 22, 24, 26, 28, 30}</code>), excluding interleaved and 2D matrix-reshaped codes. Pinned 32 cores (AMD EPYC 9754, 503 GiB RAM), 1 warmup + 3 serial measured runs. Excludes setup (<code>setup_ms</code>), input generation, caller-buffer reset, correctness checks, and Merkle hashing. Drivers pre-touch or reuse caller-owned buffers before timing, while encoder-allocated output and scratch space inside the timed call may still incur page faults whose time is included (logged per row in Notes).
     </p>
     <div class="key">
       <span><b>K = 2^k</b> message elements (<code>k ∈ {20, 22, 24, 26, 28, 30}</code>)</span>
       <span><b>ρ</b> nominal vs. actual codeword ratio</span>
-      <span><b>GiB/s</b> input_bytes / 2^30 / mean_s</span>
-      <span><b>MElem/s</b> K / 10^6 / mean_s</span>
       <span><span class="tag ok">OK</span> length &amp; non-zero verified</span>
       <span><span class="tag mid">DOMAIN_LIMIT</span> field / impl bound</span>
       <span><span class="tag warn">OOM_SKIPPED</span> / <span class="tag warn">OOM_LIMIT</span> &gt;420 GiB or host cap</span>
@@ -297,7 +295,7 @@ footer p{margin:0}
       <div class="pills" id="viewPills">
         <span class="pill-label">View</span>
         <button class="fbtn active" data-view="matrix" type="button">Scaling Matrix</button>
-        <button class="fbtn" data-view="compare" type="button">Same-Field Rank @ k</button>
+        <button class="fbtn" data-view="compare" type="button">Encode Time Rank @ k</button>
         <button class="fbtn" data-view="runs" type="button">Detailed Runs</button>
       </div>
       <div class="search-box">
@@ -319,12 +317,6 @@ footer p{margin:0}
           <button class="fbtn" data-chartmode="bar" type="button">Bar @ k</button>
           <button class="fbtn" data-chartmode="line" type="button">Scaling Curve</button>
         </div>
-        <div class="pills" id="metricPills">
-          <span class="pill-label">Metric</span>
-          <button class="fbtn active" data-metric="throughput_gib_s" type="button">GiB/s</button>
-          <button class="fbtn" data-metric="throughput_melem_s" type="button">MElem/s</button>
-          <button class="fbtn" data-metric="encode_mean_ms" type="button">Time (ms)</button>
-        </div>
       </div>
     </div>
     <div class="legend" id="chartLegend"></div>
@@ -336,9 +328,9 @@ footer p{margin:0}
   <div id="tablesRoot"></div>
 
   <footer>
-    <p>Generated directly from canonical <code>results/*.csv</code> outputs. Every row enforces 1D single-codeword encoding (<code>nrows = 1</code>, <code>width = 1</code>, <code>log_batch_size = 0</code>).</p>
+    <p>Generated directly from canonical <code>results/tracks/*.csv</code> outputs. Every measured row uses 1D single-codeword encoding (<code>nrows = 1</code>, <code>width = 1</code>, <code>log_batch_size = 0</code>).</p>
     <p>Timing &amp; memory boundary: drivers pre-touch or reset caller-owned buffers before timing; allocation-returning encoders include their own output and temporary scratch allocations—plus any minor or major page faults incurred within the timed interval (logged per row in Notes)—in <code>encode_mean_ms</code> / <code>encode_median_ms</code>. <code>setup_ms</code> covers tables/graphs; <code>peak_rss_gib</code> is whole-process peak RSS.</p>
-    <p>Notes on comparability: compare <code>MElem/s</code> and <code>GiB/s</code> directly only within the same <code>(field, reduced K/N)</code> slice (4-decimal values are for display only). ERA (<code>r∈{2,4}</code> includes 1.05× inner Brakedown) and Bolt (<code>bolt-xor</code>/<code>bolt32</code> include systematic input + inner RS) report both nominal and exact <code>K/N</code>. <code>bolt-rs</code> stock RS kernel runs with <code>threads=1</code> under the 32-core affinity. Hyphenated fields (e.g., <code>bf32-bf128</code>) indicate subfield inputs encoded into extension codewords.</p>
+    <p>Encoding time ranks group by field, exact rate <code>K/N</code>, and input length <code>K</code>. The four-decimal rates are display values. ERA (<code>r∈{2,4}</code> includes 1.05× inner Brakedown) and Bolt (<code>bolt-xor</code>/<code>bolt32</code> include systematic input + inner RS) report both nominal and exact <code>K/N</code>. The stock <code>bolt-rs</code> RS kernel runs with <code>threads=1</code> under the 32-core affinity. Hyphenated fields such as <code>bf32-bf128</code> indicate subfield inputs encoded into extension codewords.</p>
   </footer>
 </div>
 <div class="tooltip" id="tooltip"></div>
@@ -361,7 +353,6 @@ const state = {
   status: "all",
   view: "matrix",
   chartmode: "auto",
-  metric: "throughput_gib_s",
   kFocus: 20,
   query: "",
   hiddenSeries: new Set(),
@@ -396,7 +387,6 @@ bindPills("ratePills", "rate", () => { state.hiddenSeries.clear(); render(); });
 bindPills("statusPills", "status", render);
 bindPills("viewPills", "view", render);
 bindPills("chartModePills", "chartmode", renderChart);
-bindPills("metricPills", "metric", render);
 document.getElementById("searchInput").addEventListener("input", (e) => {
   state.query = e.target.value.trim().toLowerCase();
   render();
@@ -508,13 +498,13 @@ function syncDynamicPills() {
   };
 }
 
-function filteredRows(ignoreStatus = false) {
+function filteredRows() {
   return DATA.filter(r => {
     if (state.track !== "all" && r.table_id !== state.track) return false;
     if (state.field !== "all" && r.field !== state.field) return false;
     if (state.rate !== "all" && rateBucket(r.nominal_rate) !== state.rate) return false;
     if (state.actualRate !== "all" && actualRateKey(r) !== state.actualRate) return false;
-    if (!ignoreStatus && !statusMatch(r.status)) return false;
+    if (!statusMatch(r.status)) return false;
     if (state.query) {
       const hay = [r.zoo_id, r.code_family, r.variant, r.field, r.repo, r.status, r.nominal_rate, r.actual_rate, r.notes].join(" ").toLowerCase();
       if (!hay.includes(state.query)) return false;
@@ -564,7 +554,8 @@ function renderStats() {
   const excl = DATA.filter(r => r.status === "EXCLUDED_INTERLEAVED" || r.status === "UNSUPPORTED_BACKEND" || r.status === "EXCLUDED");
   const primeOk = ok.filter(r => r.table_id === "prime_goldilocks_1d");
   const binOk = ok.filter(r => r.table_id === "binary_1d");
-  const best = ok.reduce((a, b) => (+b.throughput_gib_s > +(a?.throughput_gib_s || -1) ? b : a), null);
+  const maxK = Math.max(...ok.map(r => Number(r.k)));
+  const maxKCount = ok.filter(r => Number(r.k) === maxK).length;
   const seriesCount = new Set(DATA.map(r => `${r.table_id}|${r.code_family}|${r.variant}|${r.field}|${r.nominal_rate}`)).size;
 
   const exclPart = excl.length ? ` · ${excl.length} EXCL/UNSUP` : "";
@@ -578,9 +569,9 @@ function renderStats() {
       <div class="stat-num">${primeOk.length}</div><div class="stat-sub">same-field 64-bit prime runs OK</div></div>
     <div class="stat"><div class="stat-label"><span>Binary 1D</span><span class="dot bin"></span></div>
       <div class="stat-num">${binOk.length}</div><div class="stat-sub">GF(2^16..128) &amp; 128b packed runs OK</div></div>
-    <div class="stat"><div class="stat-label"><span>Peak Observed (Current)</span><span class="dot ok"></span></div>
-      <div class="stat-num">${best ? fmtNum(best.throughput_gib_s, 2) + " GiB/s" : "Pending"}</div>
-      <div class="stat-sub">${best ? `${best.code_family}/${best.variant} · ${best.field} · ρ_act=${fmtNum(best.actual_rate, 3)} · k=${best.k}` : "Awaiting OK measurements"}</div></div>
+    <div class="stat"><div class="stat-label"><span>Largest Measured Input</span><span class="dot ok"></span></div>
+      <div class="stat-num">${maxKCount ? `2<sup>${maxK}</sup>` : "—"}</div>
+      <div class="stat-sub">${maxKCount} measured configs at this length</div></div>
   `;
 
   const activeRows = filteredRows();
@@ -593,9 +584,9 @@ function renderStats() {
     const f = [...activeFields][0];
     const sample = activeRows.find(r => actualRateKey(r));
     const rt = sample ? actualRateDisplay(sample) : [...activeActRates][0];
-    fair.innerHTML = `<span><strong>Fair comparison slice active:</strong> single field <code>${htmlEscape(f)}</code> at reduced rate <code>K/N = ${htmlEscape(rt)}</code>.</span><span>Both <code>GiB/s</code> and <code>MElem/s</code> are directly comparable.</span>`;
+    fair.innerHTML = `<span><strong>${htmlEscape(f)}</strong> · <code>K/N = ${htmlEscape(rt)}</code></span><span>Rank by mean encode time at the same <code>k</code>.</span>`;
   } else {
-    fair.innerHTML = `<span><strong>Multi-slice view (${activeFields.size} fields, ${activeActRates.size || 0} reduced K/N groups):</strong> rankings &amp; snapshots group strictly by reduced <b>K/N</b> (4 decimals for display only); filter a single <b>Field</b> and <b>Actual K/N</b> above for strict 1:1 comparison.</span><span>${activeRows.length} / ${DATA.length} configs shown</span>`;
+    fair.innerHTML = `<span>Ranks group by <strong>field</strong>, exact <strong>K/N</strong>, and <strong>k</strong>. Filter by field and rate to narrow the comparison.</span><span>${activeRows.length} / ${DATA.length} configs shown</span>`;
   }
 }
 
@@ -651,13 +642,12 @@ function groupSeries(rows) {
 }
 
 function renderChart() {
-  const rows = filteredRows(true).filter(r => r.status === "OK" && r[state.metric] !== "" && Number(r[state.metric]) > 0);
+  const rows = filteredRows().filter(r => r.status === "OK");
   const series = groupSeries(rows);
   const svg = document.getElementById("chartSvg");
   const leg = document.getElementById("chartLegend");
   const tip = document.getElementById("tooltip");
-  const metricLabel = state.metric === "throughput_gib_s" ? "Throughput (GiB/s)" :
-                      state.metric === "throughput_melem_s" ? "Throughput (MElem/s)" : "Pure Encode Time (ms)";
+  const metricLabel = "Mean Encode Time (ms)";
 
   const distinctKs = Array.from(new Set(rows.map(r => Number(r.k)))).sort((a,b) => a-b);
   const mode = state.chartmode === "auto" ? (distinctKs.length <= 1 ? "bar" : "line") : state.chartmode;
@@ -668,9 +658,11 @@ function renderChart() {
     : `${TRACKS[state.track]?.short || "All Tracks"} · ${metricLabel} Scaling (k ∈ {20, 22, 24, 26, 28, 30})`;
 
   if (!series.length) {
-    leg.innerHTML = `<span class="val-sub">No completed OK rows for current filter.</span>`;
+    leg.innerHTML = "";
+    tip.style.display = "none";
     svg.setAttribute("viewBox", "0 0 980 200");
-    svg.innerHTML = `<text x="490" y="105" text-anchor="middle" fill="var(--muted)" font-size="13">Awaiting OK benchmark measurements for this filter</text>`;
+    svg.style.height = "200px";
+    svg.innerHTML = `<text x="490" y="105" text-anchor="middle" fill="var(--muted)" font-size="13">No encoding times match the current filters</text>`;
     return;
   }
 
@@ -692,11 +684,8 @@ function renderChart() {
   const active = series.map((s, idx) => ({ ...s, color: PALETTE[idx % PALETTE.length] })).filter(s => !state.hiddenSeries.has(s.key));
 
   if (mode === "bar") {
-    const bars = active.map(s => ({ s, r: s.byK[kBar] })).filter(x => x.r && Number(x.r[state.metric]) > 0);
-    const higherBetter = state.metric !== "encode_mean_ms";
-    bars.sort((a, b) => higherBetter
-      ? Number(b.r[state.metric]) - Number(a.r[state.metric])
-      : Number(a.r[state.metric]) - Number(b.r[state.metric]));
+    const bars = active.map(s => ({ s, r: s.byK[kBar] })).filter(x => x.r);
+    bars.sort((a, b) => Number(a.r.encode_mean_ms) - Number(b.r.encode_mean_ms));
     if (!bars.length) {
       svg.setAttribute("viewBox", "0 0 980 200");
       svg.innerHTML = `<text x="490" y="105" text-anchor="middle" fill="var(--muted)" font-size="13">No OK measurements at k=${kBar} for current filter</text>`;
@@ -705,7 +694,7 @@ function renderChart() {
     const rowH = 26, top = 16, bot = 28, left = 370, right = 110, W = 980;
     const H = top + bot + bars.length * rowH;
     const pw = W - left - right;
-    const maxV = Math.max(...bars.map(b => Number(b.r[state.metric])));
+    const maxV = Math.max(...bars.map(b => Number(b.r.encode_mean_ms)));
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     svg.style.height = Math.max(180, H) + "px";
 
@@ -718,54 +707,45 @@ function renderChart() {
     }
     bars.forEach((b, i) => {
       const y = top + i * rowH;
-      const val = Number(b.r[state.metric]);
+      const val = Number(b.r.encode_mean_ms);
       const bw = Math.max(2, (val / Math.max(1e-9, maxV)) * pw);
       const label = `${b.s.code_family}/${b.s.variant} · ${b.s.field} · ρ=${seriesRateLabel(b.s)}`;
       const shortLabel = label.length > 55 ? label.slice(0, 54) + "…" : label;
-      const unit = state.metric === "throughput_gib_s" ? "GiB/s" : state.metric === "throughput_melem_s" ? "MElem/s" : "ms";
       out += `<text x="${left - 10}" y="${y + 16}" text-anchor="end" fill="var(--fg)" font-size="10.8">${htmlEscape(shortLabel)}</text>`;
       out += `<rect x="${left}" y="${y + 5}" width="${bw}" height="15" rx="3" fill="${b.s.color}" class="pt" data-tip="${htmlEscape(JSON.stringify({
         name: `${b.s.code_family}/${b.s.variant}`,
         field: b.s.field,
         rate: `cfg ${b.s.nominal_rate} · actual ${actualRateDisplay(b.r)}`,
         k: kBar,
-        gib: fmtNum(b.r.throughput_gib_s, 3),
-        melem: fmtNum(b.r.throughput_melem_s, 2),
         mean: fmtNum(b.r.encode_mean_ms, 3),
         med: fmtNum(b.r.encode_median_ms, 3),
         setup: fmtNum(b.r.setup_ms, 2),
         rss: fmtNum(b.r.peak_rss_gib, 3),
       }))}" />`;
-      out += `<text x="${left + bw + 8}" y="${y + 16}" fill="var(--muted)" font-size="10.5">${fmtNum(val, 2)} ${unit}</text>`;
+      out += `<text x="${left + bw + 8}" y="${y + 16}" fill="var(--muted)" font-size="10.5">${fmtNum(val, 2)} ms</text>`;
     });
     svg.innerHTML = out;
   } else {
     svg.setAttribute("viewBox", "0 0 980 340");
     svg.style.height = "340px";
-    const vals = active.flatMap(s => Object.values(s.byK).map(r => Number(r[state.metric])).filter(v => v > 0));
+    const vals = active.flatMap(s => Object.values(s.byK).map(r => Number(r.encode_mean_ms)));
     if (!vals.length) {
       svg.innerHTML = `<text x="490" y="165" text-anchor="middle" fill="var(--muted)" font-size="13">All curves hidden in legend</text>`;
       return;
     }
-    const isLog = state.metric === "encode_mean_ms" || (Math.max(...vals) / Math.min(...vals) > 15);
-    const minRaw = Math.min(...vals), maxRaw = Math.max(...vals);
-    const yMin = isLog ? Math.pow(10, Math.floor(Math.log10(minRaw))) : 0;
-    const yMax = isLog ? Math.pow(10, Math.ceil(Math.log10(maxRaw))) : maxRaw * 1.12;
+    const minExp = Math.floor(Math.log10(Math.min(...vals)));
+    const maxExp = Math.max(minExp + 1, Math.ceil(Math.log10(Math.max(...vals))));
     const pad = { l: 64, r: 24, t: 18, b: 36 }, W = 980, H = 340;
     const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
     const xPos = k => pad.l + ((k - 20) / 10) * pw;
-    const yPos = v => isLog
-      ? pad.t + ph - ((Math.log10(v) - Math.log10(yMin)) / Math.max(1e-9, Math.log10(yMax) - Math.log10(yMin))) * ph
-      : pad.t + ph - ((v - yMin) / Math.max(1e-9, yMax - yMin)) * ph;
+    const yPos = v => pad.t + ph - ((Math.log10(v) - minExp) / (maxExp - minExp)) * ph;
 
     let out = "";
-    const ticks = isLog
-      ? Array.from({ length: Math.round(Math.log10(yMax) - Math.log10(yMin)) + 1 }, (_, i) => Math.pow(10, Math.log10(yMin) + i))
-      : [0, 0.25, 0.5, 0.75, 1].map(f => yMin + f * (yMax - yMin));
+    const ticks = Array.from({ length: maxExp - minExp + 1 }, (_, i) => Math.pow(10, minExp + i));
     for (const tv of ticks) {
       const y = yPos(tv);
       out += `<line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" stroke="var(--line-soft)" />`;
-      out += `<text x="${pad.l - 8}" y="${y + 4}" text-anchor="end" fill="var(--muted)" font-size="10.5">${isLog ? tv.toPrecision(1) : fmtNum(tv, 2)}</text>`;
+      out += `<text x="${pad.l - 8}" y="${y + 4}" text-anchor="end" fill="var(--muted)" font-size="10.5">${tv.toPrecision(1)}</text>`;
     }
     for (const k of SIZES) {
       const x = xPos(k);
@@ -776,8 +756,8 @@ function renderChart() {
     out += `<line x1="${pad.l}" y1="${H - pad.b}" x2="${W - pad.r}" y2="${H - pad.b}" stroke="var(--line)" />`;
 
     for (const s of active) {
-      const pts = SIZES.filter(k => s.byK[k] && Number(s.byK[k][state.metric]) > 0)
-        .map(k => ({ k, r: s.byK[k], x: xPos(k), y: yPos(Number(s.byK[k][state.metric])) }));
+      const pts = SIZES.filter(k => s.byK[k])
+        .map(k => ({ k, r: s.byK[k], x: xPos(k), y: yPos(Number(s.byK[k].encode_mean_ms)) }));
       if (pts.length > 1) {
         out += `<polyline fill="none" stroke="${s.color}" stroke-width="2.1" points="${pts.map(p => `${p.x},${p.y}`).join(" ")}" />`;
       }
@@ -788,8 +768,6 @@ function renderChart() {
             field: s.field,
             rate: `cfg ${s.nominal_rate} · actual ${actualRateDisplay(p.r)}`,
             k: p.k,
-            gib: fmtNum(p.r.throughput_gib_s, 3),
-            melem: fmtNum(p.r.throughput_melem_s, 2),
             mean: fmtNum(p.r.encode_mean_ms, 3),
             med: fmtNum(p.r.encode_median_ms, 3),
             setup: fmtNum(p.r.setup_ms, 2),
@@ -804,7 +782,7 @@ function renderChart() {
     el.addEventListener("mouseenter", (e) => {
       const d = JSON.parse(el.dataset.tip);
       tip.innerHTML = `<strong>${htmlEscape(d.name)}</strong> (${htmlEscape(d.field)}, k=${d.k})<br>` +
-        `rate: ${htmlEscape(d.rate)}<br>throughput: ${d.gib} GiB/s · ${d.melem} MElem/s<br>` +
+        `rate: ${htmlEscape(d.rate)}<br>` +
         `mean: ${d.mean} ms · median: ${d.med} ms<br>setup: ${d.setup} ms · peak RSS: ${d.rss} GiB`;
       tip.style.display = "block";
       tip.style.left = Math.min(window.innerWidth - 350, e.clientX + 12) + "px";
@@ -842,8 +820,8 @@ function renderTables() {
           if (!r) return `<td class="num"><span class="val-sub">—</span></td>`;
           if (r.status === "OK") {
             const tipTitle = `actual ${actualRateDisplay(r)}` + (r.notes ? ` · ${r.notes}` : "");
-            return `<td class="num" title="${htmlEscape(tipTitle)}"><span class="val-main">${fmtNum(r.throughput_gib_s, 2)} GiB/s</span>` +
-              `<span class="val-sub">${fmtNum(r.encode_mean_ms, 2)} ms · ${fmtNum(r.throughput_melem_s, 1)}M/s</span></td>`;
+            return `<td class="num" title="${htmlEscape(tipTitle)}"><span class="val-main">${fmtNum(r.encode_mean_ms, 2)} ms</span>` +
+              `<span class="val-sub">median ${fmtNum(r.encode_median_ms, 2)} ms</span></td>`;
           }
           return `<td class="num">${statusChip(r.status, r.notes)}</td>`;
         }).join("");
@@ -883,10 +861,9 @@ function renderTables() {
         }
         slices.get(sliceKey).rows.push(r);
       }
-      const hb = state.metric !== "encode_mean_ms";
       const rowHtml = (r, maxVal) => {
         const ok = r.status === "OK";
-        const val = ok ? Number(r[state.metric]) : 0;
+        const val = ok ? Number(r.encode_mean_ms) : 0;
         const pct = ok && maxVal > 0 ? Math.min(100, (val / maxVal) * 100) : 0;
         const rk = actualRateKey(r);
         return `<tr>
@@ -896,10 +873,9 @@ function renderTables() {
           <td class="mono">${rk ? `${fmtNum(r.actual_rate, 4)}<span class="val-sub">K/N=${htmlEscape(rk)} · cfg ${htmlEscape(r.nominal_rate)}</span>` : `—<span class="val-sub">cfg ${htmlEscape(r.nominal_rate)}</span>`}</td>
           <td class="num">${r.threads || "32"}</td>
           <td class="num">${fmtNum(r.setup_ms, 2)}</td>
-          <td class="num">${fmtNum(r.encode_mean_ms, 3)}</td>
+          <td class="num bar-cell">${ok ? `<strong>${fmtNum(r.encode_mean_ms, 3)}</strong><div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%"></div></div>` : "—"}</td>
           <td class="num">${fmtNum(r.encode_median_ms, 3)}</td>
-          <td class="num">${fmtNum(r.throughput_melem_s, 2)}</td>
-          <td class="num bar-cell">${ok ? `<strong>${fmtNum(r.throughput_gib_s, 3)}</strong><div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%"></div></div>` : "—"}</td>
+          <td class="num">${fmtNum(r.peak_rss_gib, 3)}</td>
           <td>${statusChip(r.status, r.notes)}<span class="sub">${htmlEscape((r.notes || "").slice(0, 80))}</span></td>
         </tr>`;
       };
@@ -910,23 +886,21 @@ function renderTables() {
         a.rateKey.localeCompare(b.rateKey)
       );
       for (const sl of sortedSlices) {
-        const maxVal = Math.max(1e-9, ...sl.rows.map(r => Number(r[state.metric]) || 0));
-        const sorted = [...sl.rows].sort((a, b) => hb
-          ? Number(b[state.metric]) - Number(a[state.metric])
-          : Number(a[state.metric]) - Number(b[state.metric]));
-        blocks.push(`<tr class="fam"><th colspan="11">${htmlEscape(sl.field)} · actual K/N = ${htmlEscape(sl.rateDisp)} (k=${state.kFocus})</th></tr>`);
+        const maxVal = Math.max(...sl.rows.map(r => Number(r.encode_mean_ms)));
+        const sorted = [...sl.rows].sort((a, b) => Number(a.encode_mean_ms) - Number(b.encode_mean_ms));
+        blocks.push(`<tr class="fam"><th colspan="10">${htmlEscape(sl.field)} · actual K/N = ${htmlEscape(sl.rateDisp)} (k=${state.kFocus})</th></tr>`);
         blocks.push(...sorted.map(r => rowHtml(r, maxVal)));
       }
       if (nonOkK.length) {
         const sortedNon = [...nonOkK].sort((a, b) => a.status.localeCompare(b.status) || a.field.localeCompare(b.field) || a.code_family.localeCompare(b.code_family));
-        blocks.push(`<tr class="fam"><th colspan="11">Pending / Limits / Excluded at k=${state.kFocus} (${nonOkK.length})</th></tr>`);
+        blocks.push(`<tr class="fam"><th colspan="10">Pending / Limits / Excluded at k=${state.kFocus} (${nonOkK.length})</th></tr>`);
         blocks.push(...sortedNon.map(r => rowHtml(r, 1)));
       }
       const bodyRows = blocks.join("");
       htmlParts.push(`<section class="sec">${head}<div class="tw"><table><thead><tr>
         <th>Zoo</th><th>Code / Variant</th><th>Field</th><th>Actual Rate (Cfg)</th><th class="num">T</th>
-        <th class="num">Setup (ms)</th><th class="num">Mean (ms)</th><th class="num">Median (ms)</th>
-        <th class="num">MElem/s</th><th class="num">GiB/s</th><th>Status &amp; Notes</th>
+        <th class="num">Setup (ms)</th><th class="num">Mean Encode (ms)</th><th class="num">Median Encode (ms)</th>
+        <th class="num">RSS (GiB)</th><th>Status &amp; Notes</th>
       </tr></thead><tbody>${bodyRows}</tbody></table></div></section>`);
     } else {
       const bodyRows = trows.map(r => `<tr>
@@ -939,15 +913,13 @@ function renderTables() {
         <td class="num">${fmtNum(r.setup_ms, 2)}</td>
         <td class="num">${fmtNum(r.encode_mean_ms, 3)}</td>
         <td class="num">${fmtNum(r.encode_median_ms, 3)}</td>
-        <td class="num">${fmtNum(r.throughput_melem_s, 2)}</td>
-        <td class="num">${fmtNum(r.throughput_gib_s, 3)}</td>
         <td class="num">${fmtNum(r.peak_rss_gib, 3)}</td>
         <td>${statusChip(r.status, r.notes)}<span class="sub">${htmlEscape(r.notes || "")}</span></td>
       </tr>`).join("");
       htmlParts.push(`<section class="sec">${head}<div class="tw"><table><thead><tr>
         <th>Zoo</th><th>Code / Variant</th><th>Field</th><th>Rate</th><th class="num">k</th><th class="num">T</th>
         <th class="num">Setup (ms)</th><th class="num">Mean (ms)</th><th class="num">Median (ms)</th>
-        <th class="num">MElem/s</th><th class="num">GiB/s</th><th class="num">RSS (GiB)</th><th>Status &amp; Notes</th>
+        <th class="num">RSS (GiB)</th><th>Status &amp; Notes</th>
       </tr></thead><tbody>${bodyRows}</tbody></table></div></section>`);
     }
   }
@@ -972,7 +944,10 @@ def load_rows(csv_paths: list[Path]) -> list[dict[str, str]]:
     rows = []
     for path in csv_paths:
         with path.open(newline="", encoding="utf-8") as f:
-            for r in csv.DictReader(f):
+            reader = csv.DictReader(f)
+            if reader.fieldnames != COLUMNS:
+                raise ValueError(f"Unexpected track CSV columns in {path}")
+            for r in reader:
                 group_label, group_order = COMPLEXITY_ORDER.get(r["zoo_id"], ("Other Linear Codes", 99))
                 r["group_label"] = group_label
                 r["group_order"] = group_order
@@ -1055,19 +1030,18 @@ def render_family_markdown(family: str, rows: list[dict[str, str]]) -> str:
         "",
         "- **Sampling**: 1 warmup + 3 serial measured runs; reports arithmetic mean and median.",
         f"- **Timing Scope**: Measures the native 1D encoder call (`input_elements` -> `codeword_elements`) only; excludes setup (`setup_ms`), input generation, caller-buffer reset (for in-place entry points), correctness checks, and Merkle hashing/opening. Before timing, the driver pre-touches or reuses caller-owned buffers; output and temporary scratch buffers allocated internally by the encoder during the timed interval can still trigger page faults, and those times are included in the recorded measurements (per-row minor/major fault counts are logged in `results/{family}.csv` `notes`).",
-        "- **Throughput & Memory**: `MElem/s = input_elements / 1e6 / (encode_mean_ms / 1000)`, `GiB/s = input_bytes / 2^30 / (encode_mean_ms / 1000)`. `Peak RSS` is whole-process peak resident memory (`GiB`), including setup.",
+        "- **Memory**. `Peak RSS` is whole-process peak resident memory (`GiB`), including setup.",
         "",
         "## Results",
         "",
-        "| Variant | Field | Nominal Rate | Actual Rate | k | T | Setup (ms) | Mean (ms) | Median (ms) | MElem/s | GiB/s | Peak RSS (GiB) | Status |",
-        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+        "| Variant | Field | Nominal Rate | Actual Rate | k | T | Setup (ms) | Mean Encode (ms) | Median Encode (ms) | Peak RSS (GiB) | Status |",
+        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for r in sorted(rows, key=lambda x: (x["table_id"], x["variant"], x["field"], x["nominal_rate"], int(x["k"]))):
         lines.append(
             f"| `{r['variant']}` | `{r['field']}` | `{r['nominal_rate']}` | {fmt_num(r['actual_rate'], 4)} | "
             f"{r['k']} | {r['threads']} | {fmt_num(r['setup_ms'], 2)} | {fmt_num(r['encode_mean_ms'], 3)} | "
-            f"{fmt_num(r['encode_median_ms'], 3)} | {fmt_num(r['throughput_melem_s'], 2)} | "
-            f"{fmt_num(r['throughput_gib_s'], 3)} | {fmt_num(r['peak_rss_gib'], 3)} | `{r['status']}` |"
+            f"{fmt_num(r['encode_median_ms'], 3)} | {fmt_num(r['peak_rss_gib'], 3)} | `{r['status']}` |"
         )
 
     special = sorted({(r["variant"], r["field"], r["nominal_rate"], r["status"], r["notes"])
@@ -1155,7 +1129,7 @@ def render_readme(rows: list[dict[str, str]], out_dir: Path, generated_at: str) 
             "",
             "## Same-Field & Same-Actual-Rate Snapshot (Completed `OK` Rows)",
             "",
-            "Grouped strictly by `(table_id, field, reduced K/N, k)` using the exact reduced fraction `K/N = input_elements / codeword_elements` (4-decimal values in the table are for display only; `nominal_rate` is retained as configuration metadata).",
+            "Rows group by track, field, exact `K/N`, and `k`, then sort by mean encode time. The four-decimal rates are display values.",
             "",
         ])
         by_slice: dict[tuple[str, str, str, int], list[dict[str, str]]] = defaultdict(list)
@@ -1171,14 +1145,13 @@ def render_readme(rows: list[dict[str, str]], out_dir: Path, generated_at: str) 
             lines.extend([
                 f"### `{tab}` · `{fld}` · actual `K/N = {rate_key}` ({rate_dec}) · `k = {k}` (`2^{k}` elements)",
                 "",
-                "| Code / Variant | Zoo # | Config Rate | Actual Rate | Mean (ms) | Median (ms) | MElem/s | GiB/s | Peak RSS (GiB) |",
-                "|---|---|---|---:|---:|---:|---:|---:|---:|",
+                "| Code / Variant | Zoo # | Config Rate | Actual Rate | Mean Encode (ms) | Median Encode (ms) | Peak RSS (GiB) |",
+                "|---|---|---|---:|---:|---:|---:|",
             ])
-            for r in sorted(srows, key=lambda x: -float(x["throughput_gib_s"])):
+            for r in sorted(srows, key=lambda x: float(x["encode_mean_ms"])):
                 lines.append(
                     f"| `{r['code_family']}/{r['variant']}` | #{r['zoo_id']} | `{r['nominal_rate']}` | {fmt_num(r['actual_rate'], 4)} | "
-                    f"{fmt_num(r['encode_mean_ms'], 3)} | {fmt_num(r['encode_median_ms'], 3)} | "
-                    f"{fmt_num(r['throughput_melem_s'], 2)} | **{fmt_num(r['throughput_gib_s'], 3)}** | {fmt_num(r['peak_rss_gib'], 3)} |"
+                    f"{fmt_num(r['encode_mean_ms'], 3)} | {fmt_num(r['encode_median_ms'], 3)} | {fmt_num(r['peak_rss_gib'], 3)} |"
                 )
             lines.append("")
 

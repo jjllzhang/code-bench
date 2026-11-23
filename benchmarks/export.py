@@ -41,6 +41,11 @@ def summarize(rows, audit_counts, out):
         )
         lines.append(f"| {track} | {outcome['OK']} | {outcome['DOMAIN_LIMIT']} | {outcome['UNSUPPORTED_BACKEND']} | "
                      f"{outcome['EXCLUDED_INTERLEAVED']} | {outcome['OOM_SKIPPED']} | {runtime_memory} | {other} |")
+    by_size = Counter(int(r["k"]) for r in timed)
+    grid_sizes = Counter(int(r["k"]) for r in rows)
+    lines += ["", "| log₂ K | Measured | Grid points |", "|---|---:|---:|"]
+    for k in sorted(grid_sizes):
+        lines.append(f"| {k} | {by_size[k]} | {grid_sizes[k]} |")
     lines += ["", "## Matched examples at rate 1/2", "",
               "Times are the median of three samples. The full data are [grouped by code family](../results/).", "",
               "| Field | log₂ K | Variant | Encode (ms) | Setup (ms) | Peak RSS (GiB) |",
@@ -49,9 +54,11 @@ def summarize(rows, audit_counts, out):
         ("goldilocks", "rs", "p3-coset-lde"),
         ("goldilocks", "qa", "packed-wht"),
         ("goldilocks", "hyperfold", "r4-qa"),
+        ("goldilocks", "hyperfold", "r8-qa"),
         ("goldilocks", "brakedown", "brakedown-recursive"),
         ("bf32", "additive-rs", "lch"),
         ("bf32", "qa", "binary-spectral"),
+        ("bf32", "raa", "bolt-raa"),
         ("bf64", "binary-hyperfold", "r4-rs"),
         ("bf128", "additive-rs", "polybasis"),
     ]
@@ -67,11 +74,12 @@ def summarize(rows, audit_counts, out):
                              f"{float(r['setup_ms']):.3f} | {float(r['peak_rss_gib']):.3f} |")
     lines += ["", "## Reading the measurements", "",
               "- The timing columns measure the one-vector encoder call. Setup, input preparation, and commitment hashing have separate boundaries.",
-              "- Sizes measure native symbols. The time and input-byte throughput are useful together when storage widths differ.",
+              "- Sizes measure native symbols. Some encoders use different storage widths for the same field.",
               "- Actual code rates are computed from observed lengths. ERA adds redundancy in its Brakedown base code. Bolt adds inner RS parity to the systematic input.",
               "- Binary HyperFold uses its released additive-RS base code. The independent Binary QA implementation has its own rows.",
               "- The reference SIMD-Spielman targets encode columns of independent messages and are excluded.",
               "- Setup plus encoding RSS is reported for each process. Encoders with owned scratch may still incur minor faults in timed samples.",
+              "- Runtime memory failures are allocations rejected under the 420 GiB process address-space limit. Preflight memory bounds identify cases skipped before launch.",
               "", "[Methods and source revisions](../benchmarks/README.md)", ""]
     (out/"REPORT.md").write_text("\n".join(lines))
     (out/"result-counts.json").write_text(json.dumps({"status_counts": dict(audit_counts),

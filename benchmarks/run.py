@@ -17,7 +17,7 @@ import time
 from cases import grid
 
 ROOT = Path(__file__).resolve().parent
-COLUMNS = """table_id,zoo_id,code_family,variant,repo,field,field_bits,k,input_elements,input_bytes,nominal_rate,actual_rate,codeword_elements,threads,setup_ms,encode_mean_ms,encode_median_ms,throughput_melem_s,throughput_gib_s,peak_rss_gib,status,notes""".split(",")
+COLUMNS = """table_id,zoo_id,code_family,variant,repo,field,field_bits,k,input_elements,input_bytes,nominal_rate,actual_rate,codeword_elements,threads,setup_ms,encode_mean_ms,encode_median_ms,peak_rss_gib,status,notes""".split(",")
 APEAK = 420 << 30
 
 
@@ -98,8 +98,7 @@ def aggregate():
                 row.update(input_bytes=input_bytes,actual_rate=f"{n_in/n_out:.12f}",
                            codeword_elements=n_out,setup_ms=setups[0],
                            encode_mean_ms=f"{mean:.9f}",encode_median_ms=f"{statistics.median(measured):.9f}",
-                           throughput_melem_s=f"{n_in/1000/mean:.9f}",
-                           throughput_gib_s=f"{input_bytes/2**30*1000/mean:.9f}",status="OK")
+                           status="OK")
                 row["notes"] += f" peak minor faults/sample={worst_faults}; timed major faults={major_faults}. {params}"
             else:
                 stderr = (out / "stderr.log").read_text()

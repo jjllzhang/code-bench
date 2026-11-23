@@ -90,8 +90,6 @@ def audit(allow_pending):
         mean = math.fsum(times)/3
         close(row["encode_mean_ms"], mean, "mean")
         close(row["encode_median_ms"], median(times), "median")
-        close(row["throughput_melem_s"], n/mean/1000, "element throughput")
-        close(row["throughput_gib_s"], b/2**30/mean*1000, "bytes throughput")
         for index, ms, encoded, minor, major in reps:
             samples.append((case["id"], index, ms, encoded, minor, major))
     return checked, samples
