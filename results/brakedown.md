@@ -1,6 +1,6 @@
 # Brakedown / Generalized Spielman Expander Codes Benchmark Results
 
-Measurements of recursive sparse-expander Brakedown codes across four implementations: ERA's parallel recursive Brakedown, [bolt-rs](https://github.com/bcc-research/bolt-rs) (`3832e47b`), [lcpc](https://github.com/conroi/lcpc) (`f0e21160`), and [plonkish_basefold](https://github.com/hadasz/plonkish_basefold) (`c29f0865`).
+Measurements of recursive sparse-expander Brakedown codes across four implementations: parallel recursive Brakedown (ERA codebase), [bolt-rs](https://github.com/bcc-research/bolt-rs) (`3832e47b`), [lcpc](https://github.com/conroi/lcpc) (`f0e21160`), and [plonkish_basefold](https://github.com/hadasz/plonkish_basefold) (`c29f0865`).
 
 ## Setup & Parameters
 
@@ -13,8 +13,8 @@ Measurements of recursive sparse-expander Brakedown codes across four implementa
 
 ## Measurement Methodology
 
-- **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
-- **Timing & Memory Scope**: `Encode` measures pure encoding time for `K = 2^k` input elements, excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Sampling**: 1 warmup followed by 3 measured runs per configuration; reports both arithmetic mean and median encoding time.
+- **Timing Scope**: `Encode` measures encoding time for `K = 2^k` input elements, excluding `Setup` and input generation. `Peak RSS` is process peak resident memory (GiB).
 - **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
