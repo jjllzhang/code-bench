@@ -1,56 +1,56 @@
-# ERA (Encode–Repeat–Accumulate)
+# ERA (Encode–Repeat–Accumulate) Benchmark Results
 
-Single-polynomial 1D encoding benchmarks for `era` (Zoo #20; status summary: OK: 21, OOM_LIMIT: 1, OOM_SKIPPED: 2).
+Measurements of the ERA (`Encode–Repeat–Accumulate`) 1D encoder over Goldilocks and `secp256k1` scalar fields.
 
 ## Setup & Parameters
 
-- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`taskset -c 0-31`, `RAYON_NUM_THREADS=32`, `OMP_NUM_THREADS=32`); release build (`target-cpu=native`)
-- **Repositories / Revisions**: `ERA local source snapshot`
-- **Field(s)**: `goldilocks`, `secp256k1`
-- **Message Lengths**: `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`)
-- **1D Geometry**: Single codeword (`nrows = 1`, `width = 1`, `log_batch_size = 0`; no interleaving, no 2D matrix reshape)
+- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`target-cpu=native`); `32T`.
+- **Field(s)**: Goldilocks, `secp256k1`.
+- **Structure**: Inner Brakedown base code (`rho_B = 1 / 1.05`, `alpha = 0.04`, `c_n = 8`, `d_n = 64`), followed by `2×` or `4×` repetition and two rounds of permutation, diagonal scaling, and prefix accumulation.
+- **Actual Code Rates**: Repetition `2` yields actual rate `20/42 ≈ 0.4762` (labeled `1/2`); repetition `4` yields actual rate `20/84 ≈ 0.2381` (labeled `1/4`).
 
 ## Measurement Methodology
 
-- **Sampling**: 1 warmup + 3 serial measured runs; reports arithmetic mean and median.
-- **Timing Scope**: Measures the native 1D encoder call (`input_elements` -> `codeword_elements`) only; excludes setup (`setup_ms`), input generation, caller-buffer reset (for in-place entry points), correctness checks, and Merkle hashing/opening. Before timing, the driver pre-touches or reuses caller-owned buffers; output and temporary scratch buffers allocated internally by the encoder during the timed interval can still trigger page faults, and those times are included in the recorded measurements (per-row minor/major fault counts are logged in `results/era.csv` `notes`).
-- **Memory**. `Peak RSS` is whole-process peak resident memory (`GiB`), including setup.
+- **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
+- **Timing & Memory Scope**: `Encode` measures single-polynomial 1D encoding (`K = 2^k` input elements) excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
 
-| Variant | Field | Nominal Rate | Actual Rate | k | T | Setup (ms) | Mean Encode (ms) | Median Encode (ms) | Peak RSS (GiB) | Status |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/2` | 0.4762 | 20 | 32 | 4751.08 | 75.486 | 72.928 | 0.850 | `OK` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/2` | 0.4762 | 22 | 32 | 25128.04 | 418.114 | 415.953 | 3.658 | `OK` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/2` | 0.4762 | 24 | 32 | 103944.47 | 1425.536 | 1411.474 | 13.578 | `OK` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/2` | 0.4762 | 26 | 32 | 476990.96 | 6540.959 | 6478.455 | 54.307 | `OK` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/2` | 0.4762 | 28 | 32 | 2074464.61 | 25992.018 | 25824.959 | 217.217 | `OK` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/2` | — | 30 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/4` | 0.2381 | 20 | 32 | 5755.74 | 115.562 | 110.867 | 1.178 | `OK` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/4` | 0.2381 | 22 | 32 | 29177.66 | 542.615 | 535.481 | 4.707 | `OK` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/4` | 0.2381 | 24 | 32 | 120693.00 | 1781.571 | 1774.171 | 18.828 | `OK` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/4` | 0.2381 | 26 | 32 | 549341.80 | 7700.663 | 7694.662 | 75.307 | `OK` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/4` | 0.2381 | 28 | 32 | 2367602.81 | 30520.293 | 30411.289 | 301.219 | `OK` |
-| `brakedown-repeat-accumulate` | `secp256k1` | `1/4` | — | 30 | 32 | — | — | — | — | `OOM_SKIPPED` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/2` | 0.4762 | 20 | 32 | 563.99 | 14.761 | 14.385 | 0.328 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/2` | 0.4762 | 22 | 32 | 3071.86 | 78.027 | 77.995 | 1.307 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/2` | 0.4762 | 24 | 32 | 14898.62 | 348.457 | 348.398 | 5.225 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/2` | 0.4762 | 26 | 32 | 72330.42 | 1417.528 | 1415.725 | 20.898 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/2` | 0.4762 | 28 | 32 | 318713.87 | 8143.806 | 8235.936 | 83.588 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/2` | 0.4762 | 30 | 32 | 1530485.43 | 24758.263 | 24576.244 | 317.543 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/4` | 0.2381 | 20 | 32 | 681.90 | 20.923 | 20.926 | 0.441 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/4` | 0.2381 | 22 | 32 | 3689.94 | 134.703 | 134.827 | 1.768 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/4` | 0.2381 | 24 | 32 | 17381.00 | 521.734 | 525.532 | 7.061 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/4` | 0.2381 | 26 | 32 | 84100.96 | 2257.479 | 2221.407 | 28.248 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/4` | 0.2381 | 28 | 32 | 365375.45 | 10806.003 | 10795.792 | 112.986 | `OK` |
-| `brakedown-repeat-accumulate` | `goldilocks` | `1/4` | — | 30 | 32 | — | — | — | 418.340 | `OOM_LIMIT` |
+### ERA (1.05x Brakedown + Repeat-Accumulate) — Goldilocks (64-bit) (32T)
 
-## Notes & Boundaries
+| Config Rate | Actual Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|---:|
+| `1/2` | 0.4762 | 20 | 563.99 ms | 14.76 ms | 14.39 ms | 0.328 |
+| `1/2` | 0.4762 | 22 | 3.07 s | 78.03 ms | 78.00 ms | 1.307 |
+| `1/2` | 0.4762 | 24 | 14.90 s | 348.46 ms | 348.40 ms | 5.225 |
+| `1/2` | 0.4762 | 26 | 72.33 s | 1.418 s | 1.416 s | 20.898 |
+| `1/2` | 0.4762 | 28 | 318.71 s | 8.144 s | 8.236 s | 83.588 |
+| `1/2` | 0.4762 | 30 | 1530.49 s | 24.758 s | 24.576 s | 317.543 |
+| `1/4` | 0.2381 | 20 | 681.90 ms | 20.92 ms | 20.93 ms | 0.441 |
+| `1/4` | 0.2381 | 22 | 3.69 s | 134.70 ms | 134.83 ms | 1.768 |
+| `1/4` | 0.2381 | 24 | 17.38 s | 521.73 ms | 525.53 ms | 7.061 |
+| `1/4` | 0.2381 | 26 | 84.10 s | 2.257 s | 2.221 s | 28.248 |
+| `1/4` | 0.2381 | 28 | 365.38 s | 10.806 s | 10.796 s | 112.986 |
+| `1/4` | — | 30 | — | — | — | — |
 
-- `brakedown-repeat-accumulate` (`goldilocks`, config rate `1/2`, `OK`): Nominal repetition 2/4. Actual rate includes 1.05x inner Brakedown. alpha=0.04 inner_inverse_rate=1.05 c_n=8 d_n=64 repetition=2
-- `brakedown-repeat-accumulate` (`goldilocks`, config rate `1/4`, `OK`): Nominal repetition 2/4. Actual rate includes 1.05x inner Brakedown. alpha=0.04 inner_inverse_rate=1.05 c_n=8 d_n=64 repetition=4
-- `brakedown-repeat-accumulate` (`goldilocks`, config rate `1/4`, `OOM_LIMIT`): Nominal repetition 2/4. Actual rate includes 1.05x inner Brakedown. exit=134; see raw/prime_goldilocks_1d-era-brakedown-repeat-accumulate-goldilocks-30-4.
-- `brakedown-repeat-accumulate` (`secp256k1`, config rate `1/2`, `OK`): Nominal repetition 2/4. Actual rate includes 1.05x inner Brakedown. alpha=0.04 inner_inverse_rate=1.05 c_n=8 d_n=64 repetition=2
-- `brakedown-repeat-accumulate` (`secp256k1`, config rate `1/2`, `OOM_SKIPPED`): Nominal repetition 2/4. Actual rate includes 1.05x inner Brakedown. Retained ERA graph, permutations and weights lower bound 645.3 GiB.
-- `brakedown-repeat-accumulate` (`secp256k1`, config rate `1/4`, `OK`): Nominal repetition 2/4. Actual rate includes 1.05x inner Brakedown. alpha=0.04 inner_inverse_rate=1.05 c_n=8 d_n=64 repetition=4
-- `brakedown-repeat-accumulate` (`secp256k1`, config rate `1/4`, `OOM_SKIPPED`): Nominal repetition 2/4. Actual rate includes 1.05x inner Brakedown. Retained ERA graph, permutations and weights lower bound 813.3 GiB.
+### ERA (1.05x Brakedown + Repeat-Accumulate) — secp256k1 Fr (256-bit) (32T)
+
+| Config Rate | Actual Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|---:|
+| `1/2` | 0.4762 | 20 | 4.75 s | 75.49 ms | 72.93 ms | 0.850 |
+| `1/2` | 0.4762 | 22 | 25.13 s | 418.11 ms | 415.95 ms | 3.658 |
+| `1/2` | 0.4762 | 24 | 103.94 s | 1.426 s | 1.411 s | 13.578 |
+| `1/2` | 0.4762 | 26 | 476.99 s | 6.541 s | 6.478 s | 54.307 |
+| `1/2` | 0.4762 | 28 | 2074.46 s | 25.992 s | 25.825 s | 217.217 |
+| `1/2` | — | 30 | — | — | — | — |
+| `1/4` | 0.2381 | 20 | 5.76 s | 115.56 ms | 110.87 ms | 1.178 |
+| `1/4` | 0.2381 | 22 | 29.18 s | 542.62 ms | 535.48 ms | 4.707 |
+| `1/4` | 0.2381 | 24 | 120.69 s | 1.782 s | 1.774 s | 18.828 |
+| `1/4` | 0.2381 | 26 | 549.34 s | 7.701 s | 7.695 s | 75.307 |
+| `1/4` | 0.2381 | 28 | 2367.60 s | 30.520 s | 30.411 s | 301.219 |
+| `1/4` | — | 30 | — | — | — | — |
+
+## Notes
+
+- At `k = 30`, Goldilocks rate `1/4` hit the 420 GiB per-process cap, and `secp256k1` was skipped prior to launch (`> 645 GiB` lower bound for stored graph and permutation tables).

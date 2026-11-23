@@ -1,99 +1,127 @@
-# Repeat–Accumulate–Accumulate (1D RAA)
+# Repeat–Accumulate–Accumulate (RAA) Benchmark Results
 
-Single-polynomial 1D encoding benchmarks for `raa` (Zoo #11, #7; status summary: OK: 72).
+Measurements of 1D Repeat–Accumulate–Accumulate encoders across prime and binary fields: `raa-unweighted` (ERA reference implementation), [bolt-rs](https://github.com/bcc-research/bolt-rs) (`3832e47b`), [plonkish_basefold](https://github.com/hadasz/plonkish_basefold) (`c29f0865`) 64-bit packed binary RAA, and the [CRYPTO '24 EACode artifact](https://artifacts.iacr.org/crypto/2024/a10/).
 
 ## Setup & Parameters
 
-- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`taskset -c 0-31`, `RAYON_NUM_THREADS=32`, `OMP_NUM_THREADS=32`); release build (`target-cpu=native`)
-- **Repositories / Revisions**: `EACode CRYPTO’24 artifact`, `ERA local source snapshot`, `bolt-rs@3832e47b24e7b3e10525c9c5bcfc1cfe66d525f2 with local 1D driver`, `plonkish_basefold@c29f08653121637b456e4705d901d078cd6fc668`
-- **Field(s)**: `bf128`, `bf32`, `bf64`, `goldilocks`, `ristretto255`, `secp256k1`
-- **Message Lengths**: `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`)
-- **1D Geometry**: Single codeword (`nrows = 1`, `width = 1`, `log_batch_size = 0`; no interleaving, no 2D matrix reshape)
+- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`target-cpu=native`); `32T / 1T`.
+- **Field(s)**: Goldilocks, `secp256k1`, `Ristretto255`, `GF(2^32/64/128)`.
+- **`raa-unweighted`**: Repeat-permute-accumulate pipeline over Goldilocks (`8B`) and `secp256k1` Fr (`32B`).
+- **`bolt-raa`**: Binary RAA over `GF(2^32)` and `GF(2^128)`.
+- **`blaze-packed-u64`**: 64-bit word-packed binary RAA (`bf64` packed records, XOR accumulation rather than field multiplication).
+- **`eacode-official`**: Official CRYPTO '24 `EACode` RAA kernel over `Ristretto255` (`1T` serial).
 
 ## Measurement Methodology
 
-- **Sampling**: 1 warmup + 3 serial measured runs; reports arithmetic mean and median.
-- **Timing Scope**: Measures the native 1D encoder call (`input_elements` -> `codeword_elements`) only; excludes setup (`setup_ms`), input generation, caller-buffer reset (for in-place entry points), correctness checks, and Merkle hashing/opening. Before timing, the driver pre-touches or reuses caller-owned buffers; output and temporary scratch buffers allocated internally by the encoder during the timed interval can still trigger page faults, and those times are included in the recorded measurements (per-row minor/major fault counts are logged in `results/raa.csv` `notes`).
-- **Memory**. `Peak RSS` is whole-process peak resident memory (`GiB`), including setup.
+- **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
+- **Timing & Memory Scope**: `Encode` measures single-polynomial 1D encoding (`K = 2^k` input elements) excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
 
-| Variant | Field | Nominal Rate | Actual Rate | k | T | Setup (ms) | Mean Encode (ms) | Median Encode (ms) | Peak RSS (GiB) | Status |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| `blaze-packed-u64` | `bf64` | `1/2` | 0.5000 | 20 | 32 | 84.99 | 24.577 | 24.596 | 0.049 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/2` | 0.5000 | 22 | 32 | 479.98 | 88.804 | 90.521 | 0.285 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/2` | 0.5000 | 24 | 32 | 2318.21 | 406.414 | 384.633 | 1.221 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/2` | 0.5000 | 26 | 32 | 10611.05 | 1858.924 | 1904.414 | 4.975 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/2` | 0.5000 | 28 | 32 | 44976.88 | 7846.995 | 7624.032 | 19.979 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/2` | 0.5000 | 30 | 32 | 237399.29 | 62814.142 | 63108.595 | 79.971 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/4` | 0.2500 | 20 | 32 | 199.96 | 51.001 | 50.651 | 0.111 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/4` | 0.2500 | 22 | 32 | 1056.56 | 190.867 | 181.475 | 0.537 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/4` | 0.2500 | 24 | 32 | 5035.66 | 800.483 | 772.176 | 2.223 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/4` | 0.2500 | 26 | 32 | 21969.49 | 3696.387 | 3600.439 | 8.977 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/4` | 0.2500 | 28 | 32 | 102227.41 | 20745.094 | 20815.890 | 35.977 | `OK` |
-| `blaze-packed-u64` | `bf64` | `1/4` | 0.2500 | 30 | 32 | 536321.64 | 162869.537 | 167116.316 | 143.979 | `OK` |
-| `bolt-raa` | `bf128` | `1/2` | 0.5000 | 20 | 32 | 62.54 | 16.805 | 16.810 | 0.111 | `OK` |
-| `bolt-raa` | `bf128` | `1/2` | 0.5000 | 22 | 32 | 381.25 | 66.554 | 65.672 | 0.439 | `OK` |
-| `bolt-raa` | `bf128` | `1/2` | 0.5000 | 24 | 32 | 1788.04 | 255.337 | 255.392 | 1.752 | `OK` |
-| `bolt-raa` | `bf128` | `1/2` | 0.5000 | 26 | 32 | 7835.79 | 1047.442 | 1048.529 | 7.002 | `OK` |
-| `bolt-raa` | `bf128` | `1/2` | 0.5000 | 28 | 32 | 33110.44 | 4324.470 | 4316.415 | 28.002 | `OK` |
-| `bolt-raa` | `bf128` | `1/2` | 0.5000 | 30 | 32 | 169051.08 | 20586.482 | 20612.302 | 112.002 | `OK` |
-| `bolt-raa` | `bf128` | `1/4` | 0.2500 | 20 | 32 | 156.57 | 35.179 | 35.009 | 0.205 | `OK` |
-| `bolt-raa` | `bf128` | `1/4` | 0.2500 | 22 | 32 | 841.88 | 130.626 | 130.667 | 0.814 | `OK` |
-| `bolt-raa` | `bf128` | `1/4` | 0.2500 | 24 | 32 | 3775.45 | 552.181 | 531.889 | 3.252 | `OK` |
-| `bolt-raa` | `bf128` | `1/4` | 0.2500 | 26 | 32 | 15956.46 | 2242.782 | 2188.237 | 13.002 | `OK` |
-| `bolt-raa` | `bf128` | `1/4` | 0.2500 | 28 | 32 | 74134.08 | 9477.657 | 9482.879 | 52.002 | `OK` |
-| `bolt-raa` | `bf128` | `1/4` | 0.2500 | 30 | 32 | 290569.26 | 40066.773 | 42115.032 | 208.002 | `OK` |
-| `bolt-raa` | `bf32` | `1/2` | 0.5000 | 20 | 32 | 49.56 | 12.357 | 12.362 | 0.053 | `OK` |
-| `bolt-raa` | `bf32` | `1/2` | 0.5000 | 22 | 32 | 329.21 | 56.548 | 56.337 | 0.205 | `OK` |
-| `bolt-raa` | `bf32` | `1/2` | 0.5000 | 24 | 32 | 1594.33 | 220.213 | 220.039 | 0.814 | `OK` |
-| `bolt-raa` | `bf32` | `1/2` | 0.5000 | 26 | 32 | 6990.14 | 903.144 | 900.922 | 3.252 | `OK` |
-| `bolt-raa` | `bf32` | `1/2` | 0.5000 | 28 | 32 | 30112.22 | 4323.220 | 4324.264 | 13.002 | `OK` |
-| `bolt-raa` | `bf32` | `1/2` | 0.5000 | 30 | 32 | 157590.06 | 15538.693 | 15508.369 | 52.002 | `OK` |
-| `bolt-raa` | `bf32` | `1/4` | 0.2500 | 20 | 32 | 137.63 | 26.563 | 26.751 | 0.100 | `OK` |
-| `bolt-raa` | `bf32` | `1/4` | 0.2500 | 22 | 32 | 738.30 | 111.124 | 110.929 | 0.393 | `OK` |
-| `bolt-raa` | `bf32` | `1/4` | 0.2500 | 24 | 32 | 3387.42 | 455.238 | 455.496 | 1.564 | `OK` |
-| `bolt-raa` | `bf32` | `1/4` | 0.2500 | 26 | 32 | 14417.02 | 1896.638 | 1923.539 | 6.252 | `OK` |
-| `bolt-raa` | `bf32` | `1/4` | 0.2500 | 28 | 32 | 67000.46 | 7663.558 | 7638.992 | 25.002 | `OK` |
-| `bolt-raa` | `bf32` | `1/4` | 0.2500 | 30 | 32 | 261908.25 | 34157.845 | 33873.535 | 100.002 | `OK` |
-| `eacode-official` | `ristretto255` | `1/2` | 0.5000 | 20 | 1 | 61.26 | 70.041 | 70.087 | 0.188 | `OK` |
-| `eacode-official` | `ristretto255` | `1/2` | 0.5000 | 22 | 1 | 332.61 | 298.171 | 295.557 | 0.752 | `OK` |
-| `eacode-official` | `ristretto255` | `1/2` | 0.5000 | 24 | 1 | 1498.98 | 1215.089 | 1212.161 | 3.002 | `OK` |
-| `eacode-official` | `ristretto255` | `1/2` | 0.5000 | 26 | 1 | 6348.75 | 5375.041 | 5357.986 | 12.000 | `OK` |
-| `eacode-official` | `ristretto255` | `1/2` | 0.5000 | 28 | 1 | 27085.98 | 32042.495 | 32049.317 | 48.002 | `OK` |
-| `eacode-official` | `ristretto255` | `1/2` | 0.5000 | 30 | 1 | 132518.20 | 206653.649 | 206240.176 | 192.002 | `OK` |
-| `eacode-official` | `ristretto255` | `1/4` | 0.2500 | 20 | 1 | 144.81 | 143.636 | 143.572 | 0.346 | `OK` |
-| `eacode-official` | `ristretto255` | `1/4` | 0.2500 | 22 | 1 | 716.31 | 604.750 | 599.748 | 1.377 | `OK` |
-| `eacode-official` | `ristretto255` | `1/4` | 0.2500 | 24 | 1 | 3101.08 | 2509.485 | 2509.500 | 5.502 | `OK` |
-| `eacode-official` | `ristretto255` | `1/4` | 0.2500 | 26 | 1 | 13028.96 | 12709.504 | 12672.566 | 22.002 | `OK` |
-| `eacode-official` | `ristretto255` | `1/4` | 0.2500 | 28 | 1 | 58506.45 | 70456.025 | 70410.268 | 88.000 | `OK` |
-| `eacode-official` | `ristretto255` | `1/4` | 0.2500 | 30 | 1 | 291438.86 | 460756.645 | 468436.052 | 352.002 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/2` | 0.5000 | 20 | 32 | 109.05 | 31.462 | 31.514 | 0.189 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/2` | 0.5000 | 22 | 32 | 573.41 | 123.766 | 123.960 | 0.752 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/2` | 0.5000 | 24 | 32 | 2430.81 | 497.229 | 495.163 | 3.002 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/2` | 0.5000 | 26 | 32 | 9950.22 | 2005.762 | 2004.040 | 12.002 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/2` | 0.5000 | 28 | 32 | 41280.96 | 8576.530 | 8565.905 | 48.002 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/2` | 0.5000 | 30 | 32 | 202713.18 | 32003.708 | 32017.679 | 192.002 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/4` | 0.2500 | 20 | 32 | 253.73 | 62.980 | 63.067 | 0.346 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/4` | 0.2500 | 22 | 32 | 1185.14 | 245.905 | 245.941 | 1.377 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/4` | 0.2500 | 24 | 32 | 4938.16 | 983.490 | 983.182 | 5.502 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/4` | 0.2500 | 26 | 32 | 20029.63 | 4011.192 | 4008.422 | 22.002 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/4` | 0.2500 | 28 | 32 | 89147.61 | 17057.134 | 17072.569 | 88.002 | `OK` |
-| `raa-unweighted` | `secp256k1` | `1/4` | 0.2500 | 30 | 32 | 480279.56 | 62048.918 | 62060.942 | 352.002 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/2` | 0.5000 | 20 | 32 | 61.05 | 8.765 | 8.871 | 0.072 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/2` | 0.5000 | 22 | 32 | 354.02 | 36.613 | 36.238 | 0.283 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/2` | 0.5000 | 24 | 32 | 1616.46 | 153.643 | 153.528 | 1.127 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/2` | 0.5000 | 26 | 32 | 6888.79 | 631.397 | 629.610 | 4.502 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/2` | 0.5000 | 28 | 32 | 30102.48 | 2663.569 | 2662.088 | 18.002 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/2` | 0.5000 | 30 | 32 | 150815.63 | 12324.080 | 12304.139 | 72.002 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/4` | 0.2500 | 20 | 32 | 152.94 | 15.829 | 15.826 | 0.135 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/4` | 0.2500 | 22 | 32 | 782.43 | 71.537 | 71.543 | 0.533 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/4` | 0.2500 | 24 | 32 | 3371.52 | 306.463 | 306.438 | 2.127 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/4` | 0.2500 | 26 | 32 | 14127.44 | 1346.760 | 1350.963 | 8.502 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/4` | 0.2500 | 28 | 32 | 65947.61 | 5724.312 | 5609.407 | 34.002 | `OK` |
-| `raa-unweighted` | `goldilocks` | `1/4` | 0.2500 | 30 | 32 | 363496.88 | 26890.785 | 26893.612 | 136.002 | `OK` |
+### Unweighted RAA — Goldilocks (64-bit) (32T)
 
-## Notes & Boundaries
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 61.05 ms | 8.765 ms | 8.871 ms | 0.072 |
+| `1/2` | 22 | 354.02 ms | 36.61 ms | 36.24 ms | 0.283 |
+| `1/2` | 24 | 1.62 s | 153.64 ms | 153.53 ms | 1.127 |
+| `1/2` | 26 | 6.89 s | 631.40 ms | 629.61 ms | 4.502 |
+| `1/2` | 28 | 30.10 s | 2.664 s | 2.662 s | 18.002 |
+| `1/2` | 30 | 150.82 s | 12.324 s | 12.304 s | 72.002 |
+| `1/4` | 20 | 152.94 ms | 15.83 ms | 15.83 ms | 0.135 |
+| `1/4` | 22 | 782.43 ms | 71.54 ms | 71.54 ms | 0.533 |
+| `1/4` | 24 | 3.37 s | 306.46 ms | 306.44 ms | 2.127 |
+| `1/4` | 26 | 14.13 s | 1.347 s | 1.351 s | 8.502 |
+| `1/4` | 28 | 65.95 s | 5.724 s | 5.609 s | 34.002 |
+| `1/4` | 30 | 363.50 s | 26.891 s | 26.894 s | 136.002 |
 
-- `blaze-packed-u64` (`bf64`, config rate `1/2`, `OK`): 64-bit packed binary record, not a field multiply representation.
-- `blaze-packed-u64` (`bf64`, config rate `1/4`, `OK`): 64-bit packed binary record, not a field multiply representation.
+### Unweighted RAA — secp256k1 Fr (256-bit) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 109.05 ms | 31.46 ms | 31.51 ms | 0.189 |
+| `1/2` | 22 | 573.41 ms | 123.77 ms | 123.96 ms | 0.752 |
+| `1/2` | 24 | 2.43 s | 497.23 ms | 495.16 ms | 3.002 |
+| `1/2` | 26 | 9.95 s | 2.006 s | 2.004 s | 12.002 |
+| `1/2` | 28 | 41.28 s | 8.577 s | 8.566 s | 48.002 |
+| `1/2` | 30 | 202.71 s | 32.004 s | 32.018 s | 192.002 |
+| `1/4` | 20 | 253.73 ms | 62.98 ms | 63.07 ms | 0.346 |
+| `1/4` | 22 | 1.19 s | 245.91 ms | 245.94 ms | 1.377 |
+| `1/4` | 24 | 4.94 s | 983.49 ms | 983.18 ms | 5.502 |
+| `1/4` | 26 | 20.03 s | 4.011 s | 4.008 s | 22.002 |
+| `1/4` | 28 | 89.15 s | 17.057 s | 17.073 s | 88.002 |
+| `1/4` | 30 | 480.28 s | 62.049 s | 62.061 s | 352.002 |
+
+### Bolt Binary RAA — GF(2^32) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 49.56 ms | 12.36 ms | 12.36 ms | 0.053 |
+| `1/2` | 22 | 329.21 ms | 56.55 ms | 56.34 ms | 0.205 |
+| `1/2` | 24 | 1.59 s | 220.21 ms | 220.04 ms | 0.814 |
+| `1/2` | 26 | 6.99 s | 903.14 ms | 900.92 ms | 3.252 |
+| `1/2` | 28 | 30.11 s | 4.323 s | 4.324 s | 13.002 |
+| `1/2` | 30 | 157.59 s | 15.539 s | 15.508 s | 52.002 |
+| `1/4` | 20 | 137.63 ms | 26.56 ms | 26.75 ms | 0.100 |
+| `1/4` | 22 | 738.30 ms | 111.12 ms | 110.93 ms | 0.393 |
+| `1/4` | 24 | 3.39 s | 455.24 ms | 455.50 ms | 1.564 |
+| `1/4` | 26 | 14.42 s | 1.897 s | 1.924 s | 6.252 |
+| `1/4` | 28 | 67.00 s | 7.664 s | 7.639 s | 25.002 |
+| `1/4` | 30 | 261.91 s | 34.158 s | 33.874 s | 100.002 |
+
+### Bolt Binary RAA — GF(2^128) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 62.54 ms | 16.80 ms | 16.81 ms | 0.111 |
+| `1/2` | 22 | 381.25 ms | 66.55 ms | 65.67 ms | 0.439 |
+| `1/2` | 24 | 1.79 s | 255.34 ms | 255.39 ms | 1.752 |
+| `1/2` | 26 | 7.84 s | 1.047 s | 1.049 s | 7.002 |
+| `1/2` | 28 | 33.11 s | 4.324 s | 4.316 s | 28.002 |
+| `1/2` | 30 | 169.05 s | 20.586 s | 20.612 s | 112.002 |
+| `1/4` | 20 | 156.57 ms | 35.18 ms | 35.01 ms | 0.205 |
+| `1/4` | 22 | 841.88 ms | 130.63 ms | 130.67 ms | 0.814 |
+| `1/4` | 24 | 3.78 s | 552.18 ms | 531.89 ms | 3.252 |
+| `1/4` | 26 | 15.96 s | 2.243 s | 2.188 s | 13.002 |
+| `1/4` | 28 | 74.13 s | 9.478 s | 9.483 s | 52.002 |
+| `1/4` | 30 | 290.57 s | 40.067 s | 42.115 s | 208.002 |
+
+### Blaze 64-bit Packed RAA — GF(2^64) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 84.99 ms | 24.58 ms | 24.60 ms | 0.049 |
+| `1/2` | 22 | 479.98 ms | 88.80 ms | 90.52 ms | 0.285 |
+| `1/2` | 24 | 2.32 s | 406.41 ms | 384.63 ms | 1.221 |
+| `1/2` | 26 | 10.61 s | 1.859 s | 1.904 s | 4.975 |
+| `1/2` | 28 | 44.98 s | 7.847 s | 7.624 s | 19.979 |
+| `1/2` | 30 | 237.40 s | 62.814 s | 63.109 s | 79.971 |
+| `1/4` | 20 | 199.96 ms | 51.00 ms | 50.65 ms | 0.111 |
+| `1/4` | 22 | 1.06 s | 190.87 ms | 181.48 ms | 0.537 |
+| `1/4` | 24 | 5.04 s | 800.48 ms | 772.18 ms | 2.223 |
+| `1/4` | 26 | 21.97 s | 3.696 s | 3.600 s | 8.977 |
+| `1/4` | 28 | 102.23 s | 20.745 s | 20.816 s | 35.977 |
+| `1/4` | 30 | 536.32 s | 162.87 s | 167.12 s | 143.979 |
+
+### CRYPTO'24 EACode RAA — Ristretto255 Fr (253-bit) (1T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 61.26 ms | 70.04 ms | 70.09 ms | 0.188 |
+| `1/2` | 22 | 332.61 ms | 298.17 ms | 295.56 ms | 0.752 |
+| `1/2` | 24 | 1.50 s | 1.215 s | 1.212 s | 3.002 |
+| `1/2` | 26 | 6.35 s | 5.375 s | 5.358 s | 12.000 |
+| `1/2` | 28 | 27.09 s | 32.042 s | 32.049 s | 48.002 |
+| `1/2` | 30 | 132.52 s | 206.65 s | 206.24 s | 192.002 |
+| `1/4` | 20 | 144.81 ms | 143.64 ms | 143.57 ms | 0.346 |
+| `1/4` | 22 | 716.31 ms | 604.75 ms | 599.75 ms | 1.377 |
+| `1/4` | 24 | 3.10 s | 2.509 s | 2.509 s | 5.502 |
+| `1/4` | 26 | 13.03 s | 12.710 s | 12.673 s | 22.002 |
+| `1/4` | 28 | 58.51 s | 70.456 s | 70.410 s | 88.000 |
+| `1/4` | 30 | 291.44 s | 460.76 s | 468.44 s | 352.002 |
+
+## Notes
+
+- `eacode-official` RAA executes on `1` thread; all other RAA variants use `32` threads.
+- All 72 configurations completed from `k = 20` to `k = 30`.

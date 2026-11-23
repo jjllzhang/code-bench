@@ -1,55 +1,56 @@
-# Reed–Solomon (Multiplicative NTT Coset LDE)
+# Reed–Solomon (Multiplicative NTT Coset LDE) Benchmark Results
 
-Single-polynomial 1D encoding benchmarks for `rs` (Zoo #1; status summary: DOMAIN_LIMIT: 5, OK: 19).
+Measurements of [Plonky3](https://github.com/Plonky3/Plonky3) (`p3-dft` `Radix2DitParallel`, commit `0d803737`) performing single-polynomial multiplicative NTT coset low-degree extension from subgroup evaluations.
 
 ## Setup & Parameters
 
-- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`taskset -c 0-31`, `RAYON_NUM_THREADS=32`, `OMP_NUM_THREADS=32`); release build (`target-cpu=native`)
-- **Repositories / Revisions**: `Plonky3/Plonky3@0d803737b681774186cd283b1fd2d8e493655c82`
-- **Field(s)**: `babybear`, `goldilocks`
-- **Message Lengths**: `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`)
-- **1D Geometry**: Single codeword (`nrows = 1`, `width = 1`, `log_batch_size = 0`; no interleaving, no 2D matrix reshape)
+- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`target-cpu=native`); `32T`.
+- **Field(s)**: Goldilocks, BabyBear.
+- **Input Representation**: Evaluations on a multiplicative subgroup of size `2^k`.
+- **Rates**: `1/2` and `1/4`.
 
 ## Measurement Methodology
 
-- **Sampling**: 1 warmup + 3 serial measured runs; reports arithmetic mean and median.
-- **Timing Scope**: Measures the native 1D encoder call (`input_elements` -> `codeword_elements`) only; excludes setup (`setup_ms`), input generation, caller-buffer reset (for in-place entry points), correctness checks, and Merkle hashing/opening. Before timing, the driver pre-touches or reuses caller-owned buffers; output and temporary scratch buffers allocated internally by the encoder during the timed interval can still trigger page faults, and those times are included in the recorded measurements (per-row minor/major fault counts are logged in `results/rs.csv` `notes`).
-- **Memory**. `Peak RSS` is whole-process peak resident memory (`GiB`), including setup.
+- **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
+- **Timing & Memory Scope**: `Encode` measures single-polynomial 1D encoding (`K = 2^k` input elements) excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
 
-| Variant | Field | Nominal Rate | Actual Rate | k | T | Setup (ms) | Mean Encode (ms) | Median Encode (ms) | Peak RSS (GiB) | Status |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| `p3-coset-lde` | `babybear` | `1/2` | 0.5000 | 20 | 32 | 7.66 | 26.564 | 26.612 | 0.016 | `OK` |
-| `p3-coset-lde` | `babybear` | `1/2` | 0.5000 | 22 | 32 | 19.44 | 84.233 | 84.259 | 0.062 | `OK` |
-| `p3-coset-lde` | `babybear` | `1/2` | 0.5000 | 24 | 32 | 70.67 | 335.044 | 334.696 | 0.352 | `OK` |
-| `p3-coset-lde` | `babybear` | `1/2` | 0.5000 | 26 | 32 | 263.72 | 1371.380 | 1363.525 | 1.469 | `OK` |
-| `p3-coset-lde` | `babybear` | `1/2` | — | 28 | 32 | — | — | — | — | `DOMAIN_LIMIT` |
-| `p3-coset-lde` | `babybear` | `1/2` | — | 30 | 32 | — | — | — | — | `DOMAIN_LIMIT` |
-| `p3-coset-lde` | `babybear` | `1/4` | 0.2500 | 20 | 32 | 7.61 | 32.659 | 32.781 | 0.023 | `OK` |
-| `p3-coset-lde` | `babybear` | `1/4` | 0.2500 | 22 | 32 | 20.81 | 116.828 | 115.841 | 0.137 | `OK` |
-| `p3-coset-lde` | `babybear` | `1/4` | 0.2500 | 24 | 32 | 79.47 | 492.878 | 487.074 | 0.600 | `OK` |
-| `p3-coset-lde` | `babybear` | `1/4` | — | 26 | 32 | — | — | — | — | `DOMAIN_LIMIT` |
-| `p3-coset-lde` | `babybear` | `1/4` | — | 28 | 32 | — | — | — | — | `DOMAIN_LIMIT` |
-| `p3-coset-lde` | `babybear` | `1/4` | — | 30 | 32 | — | — | — | — | `DOMAIN_LIMIT` |
-| `p3-coset-lde` | `goldilocks` | `1/2` | 0.5000 | 20 | 32 | 10.81 | 16.767 | 16.910 | 0.029 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/2` | 0.5000 | 22 | 32 | 33.97 | 80.127 | 81.055 | 0.172 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/2` | 0.5000 | 24 | 32 | 125.10 | 258.672 | 258.672 | 0.729 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/2` | 0.5000 | 26 | 32 | 482.50 | 966.558 | 961.177 | 2.975 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/2` | 0.5000 | 28 | 32 | 1832.08 | 3830.910 | 3832.318 | 11.975 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/2` | 0.5000 | 30 | 32 | 7629.36 | 17053.001 | 16699.257 | 47.975 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/4` | 0.2500 | 20 | 32 | 12.79 | 22.740 | 22.419 | 0.051 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/4` | 0.2500 | 22 | 32 | 42.50 | 92.533 | 91.341 | 0.293 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/4` | 0.2500 | 24 | 32 | 149.73 | 290.067 | 290.032 | 1.223 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/4` | 0.2500 | 26 | 32 | 590.16 | 1178.320 | 1173.671 | 4.979 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/4` | 0.2500 | 28 | 32 | 2296.46 | 5152.675 | 5152.885 | 19.971 | `OK` |
-| `p3-coset-lde` | `goldilocks` | `1/4` | 0.2500 | 30 | 32 | 9420.31 | 21363.501 | 21420.770 | 79.969 | `OK` |
+### Plonky3 Radix-2 DIT Coset LDE — Goldilocks (64-bit) (32T)
 
-## Notes & Boundaries
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 10.81 ms | 16.77 ms | 16.91 ms | 0.029 |
+| `1/2` | 22 | 33.97 ms | 80.13 ms | 81.06 ms | 0.172 |
+| `1/2` | 24 | 125.10 ms | 258.67 ms | 258.67 ms | 0.729 |
+| `1/2` | 26 | 482.50 ms | 966.56 ms | 961.18 ms | 2.975 |
+| `1/2` | 28 | 1.83 s | 3.831 s | 3.832 s | 11.975 |
+| `1/2` | 30 | 7.63 s | 17.053 s | 16.699 s | 47.975 |
+| `1/4` | 20 | 12.79 ms | 22.74 ms | 22.42 ms | 0.051 |
+| `1/4` | 22 | 42.50 ms | 92.53 ms | 91.34 ms | 0.293 |
+| `1/4` | 24 | 149.73 ms | 290.07 ms | 290.03 ms | 1.223 |
+| `1/4` | 26 | 590.16 ms | 1.178 s | 1.174 s | 4.979 |
+| `1/4` | 28 | 2.30 s | 5.153 s | 5.153 s | 19.971 |
+| `1/4` | 30 | 9.42 s | 21.364 s | 21.421 s | 79.969 |
 
-- `p3-coset-lde` (`babybear`, config rate `1/2`, `DOMAIN_LIMIT`): Single-column coset LDE from input evaluations. Owned output buffer reused. Need k+log2(c) <= 27.
-- `p3-coset-lde` (`babybear`, config rate `1/2`, `OK`): Single-column coset LDE from input evaluations. Owned output buffer reused.
-- `p3-coset-lde` (`babybear`, config rate `1/4`, `DOMAIN_LIMIT`): Single-column coset LDE from input evaluations. Owned output buffer reused. Need k+log2(c) <= 27.
-- `p3-coset-lde` (`babybear`, config rate `1/4`, `OK`): Single-column coset LDE from input evaluations. Owned output buffer reused.
-- `p3-coset-lde` (`goldilocks`, config rate `1/2`, `OK`): Single-column coset LDE from input evaluations. Owned output buffer reused.
-- `p3-coset-lde` (`goldilocks`, config rate `1/4`, `OK`): Single-column coset LDE from input evaluations. Owned output buffer reused.
+### Plonky3 Radix-2 DIT Coset LDE — BabyBear (31-bit) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 7.66 ms | 26.56 ms | 26.61 ms | 0.016 |
+| `1/2` | 22 | 19.44 ms | 84.23 ms | 84.26 ms | 0.062 |
+| `1/2` | 24 | 70.67 ms | 335.04 ms | 334.70 ms | 0.352 |
+| `1/2` | 26 | 263.72 ms | 1.371 s | 1.364 s | 1.469 |
+| `1/2` | 28 | — | — | — | — |
+| `1/2` | 30 | — | — | — | — |
+| `1/4` | 20 | 7.61 ms | 32.66 ms | 32.78 ms | 0.023 |
+| `1/4` | 22 | 20.81 ms | 116.83 ms | 115.84 ms | 0.137 |
+| `1/4` | 24 | 79.47 ms | 492.88 ms | 487.07 ms | 0.600 |
+| `1/4` | 26 | — | — | — | — |
+| `1/4` | 28 | — | — | — | — |
+| `1/4` | 30 | — | — | — | — |
+
+## Notes
+
+- BabyBear (`31-bit`) has a 2-adic subgroup order limit of `2^27`, capping codeword length `N = 2^k / rate <= 2^27` (`k <= 26` at rate `1/2`, `k <= 24` at rate `1/4`).

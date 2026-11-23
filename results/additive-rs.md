@@ -1,115 +1,109 @@
-# Binary Additive Reed–Solomon (LCH14 / PolyBasis / Bolt-RS)
+# Binary Additive Reed–Solomon Benchmark Results
 
-Single-polynomial 1D encoding benchmarks for `additive-rs` (Zoo #3; status summary: OK: 60, UNSUPPORTED_BACKEND: 24).
+Measurements of additive-NTT Reed–Solomon encoders over binary tower fields: [Plonky3](https://github.com/Plonky3/Plonky3) (`p3-binary-dft`, commit `0d803737`) LCH14 and polynomial-basis encoders (`32T`), alongside [bolt-rs](https://github.com/bcc-research/bolt-rs) (commit `3832e47b`) single-codeword RS (`1T`).
 
 ## Setup & Parameters
 
-- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`taskset -c 0-31`, `RAYON_NUM_THREADS=32`, `OMP_NUM_THREADS=32`); release build (`target-cpu=native`)
-- **Repositories / Revisions**: `Plonky3/Plonky3@0d803737b681774186cd283b1fd2d8e493655c82`, `bolt-rs@3832e47b24e7b3e10525c9c5bcfc1cfe66d525f2 with local 1D driver`
-- **Field(s)**: `bf128`, `bf32`, `bf64`
-- **Message Lengths**: `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`)
-- **1D Geometry**: Single codeword (`nrows = 1`, `width = 1`, `log_batch_size = 0`; no interleaving, no 2D matrix reshape)
+- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`target-cpu=native`); `32T / 1T`.
+- **Field(s)**: `GF(2^32)`, `GF(2^64)`, `GF(2^128)`.
+- **`lch`**: Plonky3 Lin–Chung–Han additive NTT (`GF(2^32)`, `GF(2^64)`, `GF(2^128)`).
+- **`polybasis`**: Plonky3 `PolyBasisNtt` (supports `GF(2^128)` only).
+- **`bolt-rs`**: `bolt-rs` `ReedSolomonEncoding` single-codeword kernel (serial `1T` execution).
 
 ## Measurement Methodology
 
-- **Sampling**: 1 warmup + 3 serial measured runs; reports arithmetic mean and median.
-- **Timing Scope**: Measures the native 1D encoder call (`input_elements` -> `codeword_elements`) only; excludes setup (`setup_ms`), input generation, caller-buffer reset (for in-place entry points), correctness checks, and Merkle hashing/opening. Before timing, the driver pre-touches or reuses caller-owned buffers; output and temporary scratch buffers allocated internally by the encoder during the timed interval can still trigger page faults, and those times are included in the recorded measurements (per-row minor/major fault counts are logged in `results/additive-rs.csv` `notes`).
-- **Memory**. `Peak RSS` is whole-process peak resident memory (`GiB`), including setup.
+- **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
+- **Timing & Memory Scope**: `Encode` measures single-polynomial 1D encoding (`K = 2^k` input elements) excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
 
-| Variant | Field | Nominal Rate | Actual Rate | k | T | Setup (ms) | Mean Encode (ms) | Median Encode (ms) | Peak RSS (GiB) | Status |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| `bolt-rs` | `bf32` | `1/2` | 0.5000 | 20 | 1 | 18.22 | 41.404 | 41.415 | 0.025 | `OK` |
-| `bolt-rs` | `bf32` | `1/2` | 0.5000 | 22 | 1 | 74.55 | 174.759 | 174.763 | 0.096 | `OK` |
-| `bolt-rs` | `bf32` | `1/2` | 0.5000 | 24 | 1 | 291.85 | 740.898 | 742.036 | 0.377 | `OK` |
-| `bolt-rs` | `bf32` | `1/2` | 0.5000 | 26 | 1 | 1208.23 | 3456.038 | 3450.693 | 1.502 | `OK` |
-| `bolt-rs` | `bf32` | `1/2` | 0.5000 | 28 | 1 | 5182.71 | 15774.159 | 15793.000 | 6.002 | `OK` |
-| `bolt-rs` | `bf32` | `1/2` | 0.5000 | 30 | 1 | 20876.32 | 72040.298 | 72038.301 | 24.002 | `OK` |
-| `bolt-rs` | `bf32` | `1/4` | 0.2500 | 20 | 1 | 32.25 | 81.573 | 81.582 | 0.041 | `OK` |
-| `bolt-rs` | `bf32` | `1/4` | 0.2500 | 22 | 1 | 129.33 | 344.718 | 344.752 | 0.158 | `OK` |
-| `bolt-rs` | `bf32` | `1/4` | 0.2500 | 24 | 1 | 520.68 | 1460.502 | 1462.607 | 0.627 | `OK` |
-| `bolt-rs` | `bf32` | `1/4` | 0.2500 | 26 | 1 | 2194.04 | 7054.133 | 7049.040 | 2.502 | `OK` |
-| `bolt-rs` | `bf32` | `1/4` | 0.2500 | 28 | 1 | 9105.25 | 31995.064 | 31991.939 | 10.002 | `OK` |
-| `bolt-rs` | `bf32` | `1/4` | 0.2500 | 30 | 1 | 36249.35 | 150013.433 | 150013.919 | 40.002 | `OK` |
-| `lch` | `bf128` | `1/2` | 0.5000 | 20 | 32 | 0.00 | 5.298 | 5.386 | 0.021 | `OK` |
-| `lch` | `bf128` | `1/2` | 0.5000 | 22 | 32 | 0.00 | 23.690 | 23.296 | 0.156 | `OK` |
-| `lch` | `bf128` | `1/2` | 0.5000 | 24 | 32 | 0.00 | 89.084 | 89.048 | 0.744 | `OK` |
-| `lch` | `bf128` | `1/2` | 0.5000 | 26 | 32 | 0.00 | 358.549 | 358.758 | 2.996 | `OK` |
-| `lch` | `bf128` | `1/2` | 0.5000 | 28 | 32 | 0.00 | 1843.905 | 1838.489 | 11.977 | `OK` |
-| `lch` | `bf128` | `1/2` | 0.5000 | 30 | 32 | 0.00 | 8023.440 | 8031.899 | 47.979 | `OK` |
-| `lch` | `bf128` | `1/4` | 0.2500 | 20 | 32 | 0.00 | 9.318 | 9.315 | 0.064 | `OK` |
-| `lch` | `bf128` | `1/4` | 0.2500 | 22 | 32 | 0.00 | 36.266 | 36.244 | 0.299 | `OK` |
-| `lch` | `bf128` | `1/4` | 0.2500 | 24 | 32 | 0.00 | 147.517 | 147.544 | 1.246 | `OK` |
-| `lch` | `bf128` | `1/4` | 0.2500 | 26 | 32 | 0.00 | 612.931 | 590.190 | 4.986 | `OK` |
-| `lch` | `bf128` | `1/4` | 0.2500 | 28 | 32 | 0.00 | 3114.147 | 3129.605 | 19.977 | `OK` |
-| `lch` | `bf128` | `1/4` | 0.2500 | 30 | 32 | 0.00 | 13054.488 | 13330.975 | 79.979 | `OK` |
-| `lch` | `bf32` | `1/2` | 0.5000 | 20 | 32 | 0.00 | 6.872 | 6.930 | 0.006 | `OK` |
-| `lch` | `bf32` | `1/2` | 0.5000 | 22 | 32 | 0.00 | 20.562 | 20.645 | 0.018 | `OK` |
-| `lch` | `bf32` | `1/2` | 0.5000 | 24 | 32 | 0.00 | 56.579 | 57.135 | 0.154 | `OK` |
-| `lch` | `bf32` | `1/2` | 0.5000 | 26 | 32 | 0.00 | 214.911 | 213.968 | 0.740 | `OK` |
-| `lch` | `bf32` | `1/2` | 0.5000 | 28 | 32 | 0.00 | 930.558 | 926.804 | 2.990 | `OK` |
-| `lch` | `bf32` | `1/2` | 0.5000 | 30 | 32 | 0.00 | 3876.730 | 3856.658 | 11.975 | `OK` |
-| `lch` | `bf32` | `1/4` | 0.2500 | 20 | 32 | 0.00 | 10.599 | 10.618 | 0.006 | `OK` |
-| `lch` | `bf32` | `1/4` | 0.2500 | 22 | 32 | 0.00 | 28.307 | 27.673 | 0.051 | `OK` |
-| `lch` | `bf32` | `1/4` | 0.2500 | 24 | 32 | 0.00 | 103.025 | 104.024 | 0.289 | `OK` |
-| `lch` | `bf32` | `1/4` | 0.2500 | 26 | 32 | 0.00 | 428.128 | 406.051 | 1.242 | `OK` |
-| `lch` | `bf32` | `1/4` | 0.2500 | 28 | 32 | 0.00 | 1731.166 | 1713.821 | 4.990 | `OK` |
-| `lch` | `bf32` | `1/4` | 0.2500 | 30 | 32 | 0.00 | 7485.276 | 7602.427 | 19.975 | `OK` |
-| `lch` | `bf64` | `1/2` | 0.5000 | 20 | 32 | 0.00 | 7.205 | 7.217 | 0.010 | `OK` |
-| `lch` | `bf64` | `1/2` | 0.5000 | 22 | 32 | 0.00 | 20.972 | 21.637 | 0.072 | `OK` |
-| `lch` | `bf64` | `1/2` | 0.5000 | 24 | 32 | 0.00 | 63.304 | 63.025 | 0.363 | `OK` |
-| `lch` | `bf64` | `1/2` | 0.5000 | 26 | 32 | 0.00 | 254.303 | 254.292 | 1.480 | `OK` |
-| `lch` | `bf64` | `1/2` | 0.5000 | 28 | 32 | 0.00 | 1227.432 | 1226.536 | 5.975 | `OK` |
-| `lch` | `bf64` | `1/2` | 0.5000 | 30 | 32 | 0.00 | 5253.158 | 5271.374 | 23.979 | `OK` |
-| `lch` | `bf64` | `1/4` | 0.2500 | 20 | 32 | 0.00 | 11.247 | 10.681 | 0.012 | `OK` |
-| `lch` | `bf64` | `1/4` | 0.2500 | 22 | 32 | 0.00 | 32.917 | 31.718 | 0.145 | `OK` |
-| `lch` | `bf64` | `1/4` | 0.2500 | 24 | 32 | 0.00 | 115.469 | 115.495 | 0.607 | `OK` |
-| `lch` | `bf64` | `1/4` | 0.2500 | 26 | 32 | 0.00 | 489.328 | 466.414 | 2.484 | `OK` |
-| `lch` | `bf64` | `1/4` | 0.2500 | 28 | 32 | 0.00 | 2286.234 | 2286.231 | 9.979 | `OK` |
-| `lch` | `bf64` | `1/4` | 0.2500 | 30 | 32 | 0.00 | 9347.412 | 9646.798 | 39.979 | `OK` |
-| `polybasis` | `bf128` | `1/2` | 0.5000 | 20 | 32 | 0.00 | 4.483 | 4.470 | 0.049 | `OK` |
-| `polybasis` | `bf128` | `1/2` | 0.5000 | 22 | 32 | 0.00 | 27.208 | 28.308 | 0.188 | `OK` |
-| `polybasis` | `bf128` | `1/2` | 0.5000 | 24 | 32 | 0.00 | 81.539 | 79.701 | 0.752 | `OK` |
-| `polybasis` | `bf128` | `1/2` | 0.5000 | 26 | 32 | 0.00 | 371.011 | 370.898 | 3.002 | `OK` |
-| `polybasis` | `bf128` | `1/2` | 0.5000 | 28 | 32 | 0.00 | 1125.488 | 1115.038 | 12.002 | `OK` |
-| `polybasis` | `bf128` | `1/2` | 0.5000 | 30 | 32 | 0.00 | 4244.557 | 4233.646 | 47.998 | `OK` |
-| `polybasis` | `bf128` | `1/4` | 0.2500 | 20 | 32 | 0.00 | 7.536 | 7.405 | 0.078 | `OK` |
-| `polybasis` | `bf128` | `1/4` | 0.2500 | 22 | 32 | 0.00 | 51.521 | 51.206 | 0.314 | `OK` |
-| `polybasis` | `bf128` | `1/4` | 0.2500 | 24 | 32 | 0.00 | 168.257 | 168.139 | 1.252 | `OK` |
-| `polybasis` | `bf128` | `1/4` | 0.2500 | 26 | 32 | 0.00 | 685.705 | 687.349 | 5.002 | `OK` |
-| `polybasis` | `bf128` | `1/4` | 0.2500 | 28 | 32 | 0.00 | 2089.195 | 2090.391 | 19.994 | `OK` |
-| `polybasis` | `bf128` | `1/4` | 0.2500 | 30 | 32 | 0.00 | 7997.710 | 7992.449 | 79.998 | `OK` |
-| `polybasis` | `bf32` | `1/2` | — | 20 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/2` | — | 22 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/2` | — | 24 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/2` | — | 26 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/2` | — | 28 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/2` | — | 30 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/4` | — | 20 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/4` | — | 22 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/4` | — | 24 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/4` | — | 26 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/4` | — | 28 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf32` | `1/4` | — | 30 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/2` | — | 20 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/2` | — | 22 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/2` | — | 24 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/2` | — | 26 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/2` | — | 28 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/2` | — | 30 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/4` | — | 20 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/4` | — | 22 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/4` | — | 24 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/4` | — | 26 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/4` | — | 28 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
-| `polybasis` | `bf64` | `1/4` | — | 30 | 32 | — | — | — | — | `UNSUPPORTED_BACKEND` |
+### Plonky3 PolyBasis NTT — GF(2^128) (32T)
 
-## Notes & Boundaries
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | <0.01 ms | 4.483 ms | 4.470 ms | 0.049 |
+| `1/2` | 22 | <0.01 ms | 27.21 ms | 28.31 ms | 0.188 |
+| `1/2` | 24 | <0.01 ms | 81.54 ms | 79.70 ms | 0.752 |
+| `1/2` | 26 | <0.01 ms | 371.01 ms | 370.90 ms | 3.002 |
+| `1/2` | 28 | <0.01 ms | 1.125 s | 1.115 s | 12.002 |
+| `1/2` | 30 | <0.01 ms | 4.245 s | 4.234 s | 47.998 |
+| `1/4` | 20 | <0.01 ms | 7.536 ms | 7.405 ms | 0.078 |
+| `1/4` | 22 | <0.01 ms | 51.52 ms | 51.21 ms | 0.314 |
+| `1/4` | 24 | <0.01 ms | 168.26 ms | 168.14 ms | 1.252 |
+| `1/4` | 26 | <0.01 ms | 685.71 ms | 687.35 ms | 5.002 |
+| `1/4` | 28 | <0.01 ms | 2.089 s | 2.090 s | 19.994 |
+| `1/4` | 30 | <0.01 ms | 7.998 s | 7.992 s | 79.998 |
 
-- `bolt-rs` (`bf32`, config rate `1/2`, `OK`): Stock per-codeword RS kernel is serial under the 32-core affinity.
-- `bolt-rs` (`bf32`, config rate `1/4`, `OK`): Stock per-codeword RS kernel is serial under the 32-core affinity.
-- `polybasis` (`bf32`, config rate `1/2`, `UNSUPPORTED_BACKEND`): Stock PolyBasisNtt implements BinaryField128 only.
-- `polybasis` (`bf32`, config rate `1/4`, `UNSUPPORTED_BACKEND`): Stock PolyBasisNtt implements BinaryField128 only.
-- `polybasis` (`bf64`, config rate `1/2`, `UNSUPPORTED_BACKEND`): Stock PolyBasisNtt implements BinaryField128 only.
-- `polybasis` (`bf64`, config rate `1/4`, `UNSUPPORTED_BACKEND`): Stock PolyBasisNtt implements BinaryField128 only.
+### Plonky3 LCH14 Additive NTT — GF(2^32) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | <0.01 ms | 6.872 ms | 6.930 ms | 0.006 |
+| `1/2` | 22 | <0.01 ms | 20.56 ms | 20.65 ms | 0.018 |
+| `1/2` | 24 | <0.01 ms | 56.58 ms | 57.13 ms | 0.154 |
+| `1/2` | 26 | <0.01 ms | 214.91 ms | 213.97 ms | 0.740 |
+| `1/2` | 28 | <0.01 ms | 930.56 ms | 926.80 ms | 2.990 |
+| `1/2` | 30 | <0.01 ms | 3.877 s | 3.857 s | 11.975 |
+| `1/4` | 20 | <0.01 ms | 10.60 ms | 10.62 ms | 0.006 |
+| `1/4` | 22 | <0.01 ms | 28.31 ms | 27.67 ms | 0.051 |
+| `1/4` | 24 | <0.01 ms | 103.03 ms | 104.02 ms | 0.289 |
+| `1/4` | 26 | <0.01 ms | 428.13 ms | 406.05 ms | 1.242 |
+| `1/4` | 28 | <0.01 ms | 1.731 s | 1.714 s | 4.990 |
+| `1/4` | 30 | <0.01 ms | 7.485 s | 7.602 s | 19.975 |
+
+### Plonky3 LCH14 Additive NTT — GF(2^64) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | <0.01 ms | 7.205 ms | 7.217 ms | 0.010 |
+| `1/2` | 22 | <0.01 ms | 20.97 ms | 21.64 ms | 0.072 |
+| `1/2` | 24 | <0.01 ms | 63.30 ms | 63.03 ms | 0.363 |
+| `1/2` | 26 | <0.01 ms | 254.30 ms | 254.29 ms | 1.480 |
+| `1/2` | 28 | <0.01 ms | 1.227 s | 1.227 s | 5.975 |
+| `1/2` | 30 | <0.01 ms | 5.253 s | 5.271 s | 23.979 |
+| `1/4` | 20 | <0.01 ms | 11.25 ms | 10.68 ms | 0.012 |
+| `1/4` | 22 | <0.01 ms | 32.92 ms | 31.72 ms | 0.145 |
+| `1/4` | 24 | <0.01 ms | 115.47 ms | 115.50 ms | 0.607 |
+| `1/4` | 26 | <0.01 ms | 489.33 ms | 466.41 ms | 2.484 |
+| `1/4` | 28 | <0.01 ms | 2.286 s | 2.286 s | 9.979 |
+| `1/4` | 30 | <0.01 ms | 9.347 s | 9.647 s | 39.979 |
+
+### Plonky3 LCH14 Additive NTT — GF(2^128) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | <0.01 ms | 5.298 ms | 5.386 ms | 0.021 |
+| `1/2` | 22 | <0.01 ms | 23.69 ms | 23.30 ms | 0.156 |
+| `1/2` | 24 | <0.01 ms | 89.08 ms | 89.05 ms | 0.744 |
+| `1/2` | 26 | <0.01 ms | 358.55 ms | 358.76 ms | 2.996 |
+| `1/2` | 28 | <0.01 ms | 1.844 s | 1.838 s | 11.977 |
+| `1/2` | 30 | <0.01 ms | 8.023 s | 8.032 s | 47.979 |
+| `1/4` | 20 | <0.01 ms | 9.318 ms | 9.315 ms | 0.064 |
+| `1/4` | 22 | <0.01 ms | 36.27 ms | 36.24 ms | 0.299 |
+| `1/4` | 24 | <0.01 ms | 147.52 ms | 147.54 ms | 1.246 |
+| `1/4` | 26 | <0.01 ms | 612.93 ms | 590.19 ms | 4.986 |
+| `1/4` | 28 | <0.01 ms | 3.114 s | 3.130 s | 19.977 |
+| `1/4` | 30 | <0.01 ms | 13.054 s | 13.331 s | 79.979 |
+
+### bolt-rs Additive RS — GF(2^32) (1T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 18.22 ms | 41.40 ms | 41.41 ms | 0.025 |
+| `1/2` | 22 | 74.55 ms | 174.76 ms | 174.76 ms | 0.096 |
+| `1/2` | 24 | 291.85 ms | 740.90 ms | 742.04 ms | 0.377 |
+| `1/2` | 26 | 1.21 s | 3.456 s | 3.451 s | 1.502 |
+| `1/2` | 28 | 5.18 s | 15.774 s | 15.793 s | 6.002 |
+| `1/2` | 30 | 20.88 s | 72.040 s | 72.038 s | 24.002 |
+| `1/4` | 20 | 32.25 ms | 81.57 ms | 81.58 ms | 0.041 |
+| `1/4` | 22 | 129.33 ms | 344.72 ms | 344.75 ms | 0.158 |
+| `1/4` | 24 | 520.68 ms | 1.461 s | 1.463 s | 0.627 |
+| `1/4` | 26 | 2.19 s | 7.054 s | 7.049 s | 2.502 |
+| `1/4` | 28 | 9.11 s | 31.995 s | 31.992 s | 10.002 |
+| `1/4` | 30 | 36.25 s | 150.01 s | 150.01 s | 40.002 |
+
+## Notes
+
+- `bolt-rs` single-codeword RS executes on `1` thread even under 32-core affinity, whereas Plonky3 `lch` and `polybasis` parallelize across `32` threads.
+- Plonky3 `PolyBasisNtt` only implements `GF(2^128)` in upstream commit `0d803737`.

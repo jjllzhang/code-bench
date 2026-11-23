@@ -1,137 +1,160 @@
-# Systematic Quasi-Abelian Codes (WHT / Binary Spectral)
+# Systematic Quasi-Abelian Codes Benchmark Results
 
-Single-polynomial 1D encoding benchmarks for `qa` (Zoo #6; status summary: OK: 96).
+Measurements of systematic Quasi-Abelian codes using [plonky3-binary-qa](https://github.com/jjllzhang/plonky3-binary-qa) (commit `19affa0a`) for characteristic-2 spectral transforms and [HyperFold](https://github.com/jjllzhang/HyperFold) (commit `405b2094`) parallel packed Walsh–Hadamard transforms over Goldilocks and M127.
 
 ## Setup & Parameters
 
-- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`taskset -c 0-31`, `RAYON_NUM_THREADS=32`, `OMP_NUM_THREADS=32`); release build (`target-cpu=native`)
-- **Repositories / Revisions**: `jjllzhang/HyperFold@405b2094c70747af6e4b1ae05aa0661bf6c7b9a9`, `jjllzhang/plonky3-binary-qa@19affa0a8de1b283e766556b757725c701397657`
-- **Field(s)**: `bf128`, `bf32`, `bf32-bf128`, `bf32-bf64`, `bf64`, `bf64-bf128`, `goldilocks`, `m127`
-- **Message Lengths**: `K = 2^k` (`k ∈ {20, 22, 24, 26, 28, 30}`)
-- **1D Geometry**: Single codeword (`nrows = 1`, `width = 1`, `log_batch_size = 0`; no interleaving, no 2D matrix reshape)
+- **Hardware & Runtime**: AMD EPYC 9754, 503 GiB RAM, 32 physical cores pinned to CPUs 0–31 (`target-cpu=native`); `32T`.
+- **Field(s)**: `GF(2^32/64/128)` (+ mixed), Goldilocks, M127.
+- **Binary Spectral (`binary-spectral`)**: Supports both same-field (`GF(2^m) -> GF(2^m)`) and subfield-to-extension (`GF(2^32) -> GF(2^64/128)`, `GF(2^64) -> GF(2^128)`) encoding.
+- **Prime WHT (`packed-wht`)**: Systematic code `(m, H D_1 H m, ...)` with parallel packed butterflies and fixed nonzero diagonal spectral units.
+- **Rates**: `1/2` and `1/4`.
 
 ## Measurement Methodology
 
-- **Sampling**: 1 warmup + 3 serial measured runs; reports arithmetic mean and median.
-- **Timing Scope**: Measures the native 1D encoder call (`input_elements` -> `codeword_elements`) only; excludes setup (`setup_ms`), input generation, caller-buffer reset (for in-place entry points), correctness checks, and Merkle hashing/opening. Before timing, the driver pre-touches or reuses caller-owned buffers; output and temporary scratch buffers allocated internally by the encoder during the timed interval can still trigger page faults, and those times are included in the recorded measurements (per-row minor/major fault counts are logged in `results/qa.csv` `notes`).
-- **Memory**. `Peak RSS` is whole-process peak resident memory (`GiB`), including setup.
+- **Sampling**: 1 warmup followed by 3 serial runs per configuration; reports both arithmetic mean and median encoding time.
+- **Timing & Memory Scope**: `Encode` measures single-polynomial 1D encoding (`K = 2^k` input elements) excluding setup/graph construction (`Setup`), input generation, and Merkle hashing. `Peak RSS` is process peak resident memory (GiB).
+- **Missing Values**: `—` denotes unmeasured points that exceed a finite-field/implementation bound or the 420 GiB / 503 GiB memory limit.
 
 ## Results
 
-| Variant | Field | Nominal Rate | Actual Rate | k | T | Setup (ms) | Mean Encode (ms) | Median Encode (ms) | Peak RSS (GiB) | Status |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| `binary-spectral` | `bf128` | `1/2` | 0.5000 | 20 | 32 | 10.01 | 8.272 | 8.304 | 0.053 | `OK` |
-| `binary-spectral` | `bf128` | `1/2` | 0.5000 | 22 | 32 | 38.56 | 41.201 | 41.309 | 0.285 | `OK` |
-| `binary-spectral` | `bf128` | `1/2` | 0.5000 | 24 | 32 | 150.01 | 176.686 | 176.287 | 1.232 | `OK` |
-| `binary-spectral` | `bf128` | `1/2` | 0.5000 | 26 | 32 | 580.73 | 807.181 | 807.675 | 4.973 | `OK` |
-| `binary-spectral` | `bf128` | `1/2` | 0.5000 | 28 | 32 | 2319.25 | 3530.756 | 3530.734 | 19.975 | `OK` |
-| `binary-spectral` | `bf128` | `1/2` | 0.5000 | 30 | 32 | 9084.59 | 15412.375 | 15406.692 | 79.975 | `OK` |
-| `binary-spectral` | `bf128` | `1/4` | 0.2500 | 20 | 32 | 29.64 | 17.534 | 17.209 | 0.119 | `OK` |
-| `binary-spectral` | `bf128` | `1/4` | 0.2500 | 22 | 32 | 117.70 | 62.481 | 59.868 | 0.535 | `OK` |
-| `binary-spectral` | `bf128` | `1/4` | 0.2500 | 24 | 32 | 441.42 | 348.339 | 346.437 | 2.221 | `OK` |
-| `binary-spectral` | `bf128` | `1/4` | 0.2500 | 26 | 32 | 1760.34 | 1594.826 | 1596.003 | 8.969 | `OK` |
-| `binary-spectral` | `bf128` | `1/4` | 0.2500 | 28 | 32 | 6903.94 | 7020.359 | 7022.656 | 35.979 | `OK` |
-| `binary-spectral` | `bf128` | `1/4` | 0.2500 | 30 | 32 | 27112.99 | 26180.974 | 26151.554 | 143.971 | `OK` |
-| `binary-spectral` | `bf32` | `1/2` | 0.5000 | 20 | 32 | 3.63 | 3.378 | 3.383 | 0.010 | `OK` |
-| `binary-spectral` | `bf32` | `1/2` | 0.5000 | 22 | 32 | 14.52 | 10.239 | 10.153 | 0.053 | `OK` |
-| `binary-spectral` | `bf32` | `1/2` | 0.5000 | 24 | 32 | 57.39 | 52.271 | 51.325 | 0.283 | `OK` |
-| `binary-spectral` | `bf32` | `1/2` | 0.5000 | 26 | 32 | 229.79 | 214.622 | 219.598 | 1.230 | `OK` |
-| `binary-spectral` | `bf32` | `1/2` | 0.5000 | 28 | 32 | 889.81 | 920.602 | 918.690 | 4.979 | `OK` |
-| `binary-spectral` | `bf32` | `1/2` | 0.5000 | 30 | 32 | 3573.13 | 4036.944 | 4025.007 | 19.973 | `OK` |
-| `binary-spectral` | `bf32` | `1/4` | 0.2500 | 20 | 32 | 10.99 | 7.305 | 7.306 | 0.018 | `OK` |
-| `binary-spectral` | `bf32` | `1/4` | 0.2500 | 22 | 32 | 43.13 | 22.967 | 23.087 | 0.121 | `OK` |
-| `binary-spectral` | `bf32` | `1/4` | 0.2500 | 24 | 32 | 172.20 | 85.440 | 85.012 | 0.541 | `OK` |
-| `binary-spectral` | `bf32` | `1/4` | 0.2500 | 26 | 32 | 677.35 | 441.630 | 438.574 | 2.223 | `OK` |
-| `binary-spectral` | `bf32` | `1/4` | 0.2500 | 28 | 32 | 2720.29 | 1960.591 | 1962.118 | 8.971 | `OK` |
-| `binary-spectral` | `bf32` | `1/4` | 0.2500 | 30 | 32 | 10620.47 | 8414.776 | 8400.059 | 35.971 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/2` | 0.5000 | 20 | 32 | 11.19 | 7.192 | 6.767 | 0.023 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/2` | 0.5000 | 22 | 32 | 40.75 | 31.167 | 31.770 | 0.193 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/2` | 0.5000 | 24 | 32 | 155.49 | 122.673 | 120.488 | 0.850 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/2` | 0.5000 | 26 | 32 | 603.26 | 548.779 | 547.748 | 3.477 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/2` | 0.5000 | 28 | 32 | 2393.31 | 2478.662 | 2425.619 | 13.971 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/2` | 0.5000 | 30 | 32 | 9278.81 | 10456.858 | 10451.568 | 55.967 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/4` | 0.2500 | 20 | 32 | 32.17 | 18.131 | 17.821 | 0.078 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/4` | 0.2500 | 22 | 32 | 116.81 | 56.080 | 54.451 | 0.443 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/4` | 0.2500 | 24 | 32 | 454.06 | 295.334 | 295.105 | 1.855 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/4` | 0.2500 | 26 | 32 | 1790.71 | 1353.296 | 1353.195 | 7.477 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/4` | 0.2500 | 28 | 32 | 7054.22 | 5961.507 | 5961.057 | 29.973 | `OK` |
-| `binary-spectral` | `bf32-bf128` | `1/4` | 0.2500 | 30 | 32 | 27578.93 | 23708.360 | 23693.480 | 119.969 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/2` | 0.5000 | 20 | 32 | 6.57 | 3.688 | 3.702 | 0.014 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/2` | 0.5000 | 22 | 32 | 21.87 | 14.098 | 14.156 | 0.104 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/2` | 0.5000 | 24 | 32 | 86.95 | 67.328 | 66.871 | 0.477 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/2` | 0.5000 | 26 | 32 | 347.26 | 295.596 | 294.104 | 1.975 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/2` | 0.5000 | 28 | 32 | 1378.94 | 1350.909 | 1348.472 | 7.969 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/2` | 0.5000 | 30 | 32 | 5277.03 | 5890.914 | 5867.309 | 31.969 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/4` | 0.2500 | 20 | 32 | 20.31 | 7.905 | 7.744 | 0.031 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/4` | 0.2500 | 22 | 32 | 65.62 | 30.599 | 31.891 | 0.219 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/4` | 0.2500 | 24 | 32 | 260.50 | 137.236 | 134.708 | 0.973 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/4` | 0.2500 | 26 | 32 | 1010.84 | 657.362 | 657.464 | 3.977 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/4` | 0.2500 | 28 | 32 | 4041.90 | 2979.390 | 2975.588 | 15.975 | `OK` |
-| `binary-spectral` | `bf32-bf64` | `1/4` | 0.2500 | 30 | 32 | 15632.66 | 13207.516 | 13184.763 | 63.969 | `OK` |
-| `binary-spectral` | `bf64` | `1/2` | 0.5000 | 20 | 32 | 6.03 | 4.607 | 4.584 | 0.018 | `OK` |
-| `binary-spectral` | `bf64` | `1/2` | 0.5000 | 22 | 32 | 21.96 | 16.543 | 16.507 | 0.139 | `OK` |
-| `binary-spectral` | `bf64` | `1/2` | 0.5000 | 24 | 32 | 87.54 | 86.079 | 84.503 | 0.602 | `OK` |
-| `binary-spectral` | `bf64` | `1/2` | 0.5000 | 26 | 32 | 339.71 | 392.513 | 391.928 | 2.477 | `OK` |
-| `binary-spectral` | `bf64` | `1/2` | 0.5000 | 28 | 32 | 1363.11 | 1769.486 | 1769.769 | 9.977 | `OK` |
-| `binary-spectral` | `bf64` | `1/2` | 0.5000 | 30 | 32 | 5301.00 | 7714.876 | 7723.587 | 39.975 | `OK` |
-| `binary-spectral` | `bf64` | `1/4` | 0.2500 | 20 | 32 | 16.51 | 9.435 | 9.266 | 0.035 | `OK` |
-| `binary-spectral` | `bf64` | `1/4` | 0.2500 | 22 | 32 | 67.05 | 37.295 | 36.816 | 0.260 | `OK` |
-| `binary-spectral` | `bf64` | `1/4` | 0.2500 | 24 | 32 | 259.78 | 161.218 | 160.476 | 1.104 | `OK` |
-| `binary-spectral` | `bf64` | `1/4` | 0.2500 | 26 | 32 | 1017.72 | 795.119 | 794.592 | 4.473 | `OK` |
-| `binary-spectral` | `bf64` | `1/4` | 0.2500 | 28 | 32 | 4055.49 | 3475.431 | 3476.174 | 17.979 | `OK` |
-| `binary-spectral` | `bf64` | `1/4` | 0.2500 | 30 | 32 | 15854.01 | 15887.404 | 15282.516 | 71.973 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/2` | 0.5000 | 20 | 32 | 10.95 | 6.040 | 6.155 | 0.027 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/2` | 0.5000 | 22 | 32 | 38.85 | 30.801 | 31.200 | 0.225 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/2` | 0.5000 | 24 | 32 | 155.26 | 130.339 | 131.143 | 0.973 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/2` | 0.5000 | 26 | 32 | 595.10 | 597.121 | 599.815 | 3.975 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/2` | 0.5000 | 28 | 32 | 2367.28 | 2643.072 | 2643.071 | 15.973 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/2` | 0.5000 | 30 | 32 | 9293.18 | 11590.608 | 11586.063 | 63.977 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/4` | 0.2500 | 20 | 32 | 30.32 | 14.312 | 14.470 | 0.086 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/4` | 0.2500 | 22 | 32 | 113.86 | 60.412 | 60.020 | 0.475 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/4` | 0.2500 | 24 | 32 | 447.48 | 283.993 | 282.082 | 1.977 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/4` | 0.2500 | 26 | 32 | 1773.44 | 1313.537 | 1308.738 | 7.967 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/4` | 0.2500 | 28 | 32 | 6995.40 | 5908.374 | 5890.993 | 31.969 | `OK` |
-| `binary-spectral` | `bf64-bf128` | `1/4` | 0.2500 | 30 | 32 | 27135.54 | 21629.646 | 21601.748 | 127.975 | `OK` |
-| `packed-wht` | `m127` | `1/2` | 0.5000 | 20 | 32 | 42.97 | 10.333 | 10.150 | 0.080 | `OK` |
-| `packed-wht` | `m127` | `1/2` | 0.5000 | 22 | 32 | 160.47 | 41.989 | 41.410 | 0.314 | `OK` |
-| `packed-wht` | `m127` | `1/2` | 0.5000 | 24 | 32 | 638.20 | 268.650 | 268.744 | 1.252 | `OK` |
-| `packed-wht` | `m127` | `1/2` | 0.5000 | 26 | 32 | 2455.33 | 1303.921 | 1303.378 | 5.002 | `OK` |
-| `packed-wht` | `m127` | `1/2` | 0.5000 | 28 | 32 | 9615.72 | 5849.837 | 5851.313 | 20.000 | `OK` |
-| `packed-wht` | `m127` | `1/2` | 0.5000 | 30 | 32 | 37902.59 | 26008.688 | 26017.781 | 80.002 | `OK` |
-| `packed-wht` | `m127` | `1/4` | 0.2500 | 20 | 32 | 84.63 | 19.198 | 19.286 | 0.143 | `OK` |
-| `packed-wht` | `m127` | `1/4` | 0.2500 | 22 | 32 | 329.66 | 79.216 | 78.957 | 0.564 | `OK` |
-| `packed-wht` | `m127` | `1/4` | 0.2500 | 24 | 32 | 1297.72 | 543.667 | 520.726 | 2.252 | `OK` |
-| `packed-wht` | `m127` | `1/4` | 0.2500 | 26 | 32 | 5195.17 | 2623.717 | 2603.610 | 9.002 | `OK` |
-| `packed-wht` | `m127` | `1/4` | 0.2500 | 28 | 32 | 20358.14 | 11421.888 | 11422.962 | 36.002 | `OK` |
-| `packed-wht` | `m127` | `1/4` | 0.2500 | 30 | 32 | 83278.42 | 56233.697 | 57858.407 | 144.002 | `OK` |
-| `packed-wht` | `goldilocks` | `1/2` | 0.5000 | 20 | 32 | 21.20 | 5.203 | 5.138 | 0.041 | `OK` |
-| `packed-wht` | `goldilocks` | `1/2` | 0.5000 | 22 | 32 | 81.73 | 20.804 | 20.657 | 0.158 | `OK` |
-| `packed-wht` | `goldilocks` | `1/2` | 0.5000 | 24 | 32 | 307.00 | 118.749 | 117.257 | 0.627 | `OK` |
-| `packed-wht` | `goldilocks` | `1/2` | 0.5000 | 26 | 32 | 1196.79 | 671.608 | 688.735 | 2.502 | `OK` |
-| `packed-wht` | `goldilocks` | `1/2` | 0.5000 | 28 | 32 | 4816.92 | 3051.623 | 3051.839 | 10.002 | `OK` |
-| `packed-wht` | `goldilocks` | `1/2` | 0.5000 | 30 | 32 | 18625.35 | 13029.117 | 12893.794 | 40.002 | `OK` |
-| `packed-wht` | `goldilocks` | `1/4` | 0.2500 | 20 | 32 | 39.69 | 9.139 | 9.172 | 0.072 | `OK` |
-| `packed-wht` | `goldilocks` | `1/4` | 0.2500 | 22 | 32 | 158.05 | 36.481 | 36.249 | 0.283 | `OK` |
-| `packed-wht` | `goldilocks` | `1/4` | 0.2500 | 24 | 32 | 633.43 | 234.997 | 234.932 | 1.127 | `OK` |
-| `packed-wht` | `goldilocks` | `1/4` | 0.2500 | 26 | 32 | 2523.92 | 1271.809 | 1295.136 | 4.502 | `OK` |
-| `packed-wht` | `goldilocks` | `1/4` | 0.2500 | 28 | 32 | 10016.70 | 5704.423 | 5702.511 | 18.002 | `OK` |
-| `packed-wht` | `goldilocks` | `1/4` | 0.2500 | 30 | 32 | 39223.46 | 25402.521 | 25229.725 | 72.002 | `OK` |
+### Binary Spectral QA — GF(2^32) (32T)
 
-## Notes & Boundaries
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 3.63 ms | 3.378 ms | 3.383 ms | 0.010 |
+| `1/2` | 22 | 14.52 ms | 10.24 ms | 10.15 ms | 0.053 |
+| `1/2` | 24 | 57.39 ms | 52.27 ms | 51.32 ms | 0.283 |
+| `1/2` | 26 | 229.79 ms | 214.62 ms | 219.60 ms | 1.230 |
+| `1/2` | 28 | 889.81 ms | 920.60 ms | 918.69 ms | 4.979 |
+| `1/2` | 30 | 3.57 s | 4.037 s | 4.025 s | 19.973 |
+| `1/4` | 20 | 10.99 ms | 7.305 ms | 7.306 ms | 0.018 |
+| `1/4` | 22 | 43.13 ms | 22.97 ms | 23.09 ms | 0.121 |
+| `1/4` | 24 | 172.20 ms | 85.44 ms | 85.01 ms | 0.541 |
+| `1/4` | 26 | 677.35 ms | 441.63 ms | 438.57 ms | 2.223 |
+| `1/4` | 28 | 2.72 s | 1.961 s | 1.962 s | 8.971 |
+| `1/4` | 30 | 10.62 s | 8.415 s | 8.400 s | 35.971 |
 
-- `binary-spectral` (`bf128`, config rate `1/2`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf128`, config rate `1/4`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf32`, config rate `1/2`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf32`, config rate `1/4`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf32-bf128`, config rate `1/2`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf32-bf128`, config rate `1/4`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf32-bf64`, config rate `1/2`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf32-bf64`, config rate `1/4`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf64`, config rate `1/2`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf64`, config rate `1/4`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf64-bf128`, config rate `1/2`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `binary-spectral` (`bf64-bf128`, config rate `1/4`, `OK`): One coefficient vector, log_batch_size=0. Hyphenated fields give input and codeword alphabets.
-- `packed-wht` (`goldilocks`, config rate `1/2`, `OK`): Benchmark-only parallel WHT, upstream packed butterflies. Fixed nonzero spectral units.
-- `packed-wht` (`goldilocks`, config rate `1/4`, `OK`): Benchmark-only parallel WHT, upstream packed butterflies. Fixed nonzero spectral units.
-- `packed-wht` (`m127`, config rate `1/2`, `OK`): Benchmark-only parallel WHT, upstream packed butterflies. Fixed nonzero spectral units.
-- `packed-wht` (`m127`, config rate `1/4`, `OK`): Benchmark-only parallel WHT, upstream packed butterflies. Fixed nonzero spectral units.
+### Binary Spectral QA — GF(2^64) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 6.03 ms | 4.607 ms | 4.584 ms | 0.018 |
+| `1/2` | 22 | 21.96 ms | 16.54 ms | 16.51 ms | 0.139 |
+| `1/2` | 24 | 87.54 ms | 86.08 ms | 84.50 ms | 0.602 |
+| `1/2` | 26 | 339.71 ms | 392.51 ms | 391.93 ms | 2.477 |
+| `1/2` | 28 | 1.36 s | 1.769 s | 1.770 s | 9.977 |
+| `1/2` | 30 | 5.30 s | 7.715 s | 7.724 s | 39.975 |
+| `1/4` | 20 | 16.51 ms | 9.435 ms | 9.266 ms | 0.035 |
+| `1/4` | 22 | 67.05 ms | 37.30 ms | 36.82 ms | 0.260 |
+| `1/4` | 24 | 259.78 ms | 161.22 ms | 160.48 ms | 1.104 |
+| `1/4` | 26 | 1.02 s | 795.12 ms | 794.59 ms | 4.473 |
+| `1/4` | 28 | 4.06 s | 3.475 s | 3.476 s | 17.979 |
+| `1/4` | 30 | 15.85 s | 15.887 s | 15.283 s | 71.973 |
+
+### Binary Spectral QA — GF(2^128) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 10.01 ms | 8.272 ms | 8.304 ms | 0.053 |
+| `1/2` | 22 | 38.56 ms | 41.20 ms | 41.31 ms | 0.285 |
+| `1/2` | 24 | 150.01 ms | 176.69 ms | 176.29 ms | 1.232 |
+| `1/2` | 26 | 580.73 ms | 807.18 ms | 807.67 ms | 4.973 |
+| `1/2` | 28 | 2.32 s | 3.531 s | 3.531 s | 19.975 |
+| `1/2` | 30 | 9.08 s | 15.412 s | 15.407 s | 79.975 |
+| `1/4` | 20 | 29.64 ms | 17.53 ms | 17.21 ms | 0.119 |
+| `1/4` | 22 | 117.70 ms | 62.48 ms | 59.87 ms | 0.535 |
+| `1/4` | 24 | 441.42 ms | 348.34 ms | 346.44 ms | 2.221 |
+| `1/4` | 26 | 1.76 s | 1.595 s | 1.596 s | 8.969 |
+| `1/4` | 28 | 6.90 s | 7.020 s | 7.023 s | 35.979 |
+| `1/4` | 30 | 27.11 s | 26.181 s | 26.152 s | 143.971 |
+
+### Binary Spectral QA — GF(2^32) -> GF(2^64) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 6.57 ms | 3.688 ms | 3.702 ms | 0.014 |
+| `1/2` | 22 | 21.87 ms | 14.10 ms | 14.16 ms | 0.104 |
+| `1/2` | 24 | 86.95 ms | 67.33 ms | 66.87 ms | 0.477 |
+| `1/2` | 26 | 347.26 ms | 295.60 ms | 294.10 ms | 1.975 |
+| `1/2` | 28 | 1.38 s | 1.351 s | 1.348 s | 7.969 |
+| `1/2` | 30 | 5.28 s | 5.891 s | 5.867 s | 31.969 |
+| `1/4` | 20 | 20.31 ms | 7.905 ms | 7.744 ms | 0.031 |
+| `1/4` | 22 | 65.62 ms | 30.60 ms | 31.89 ms | 0.219 |
+| `1/4` | 24 | 260.50 ms | 137.24 ms | 134.71 ms | 0.973 |
+| `1/4` | 26 | 1.01 s | 657.36 ms | 657.46 ms | 3.977 |
+| `1/4` | 28 | 4.04 s | 2.979 s | 2.976 s | 15.975 |
+| `1/4` | 30 | 15.63 s | 13.208 s | 13.185 s | 63.969 |
+
+### Binary Spectral QA — GF(2^32) -> GF(2^128) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 11.19 ms | 7.192 ms | 6.767 ms | 0.023 |
+| `1/2` | 22 | 40.75 ms | 31.17 ms | 31.77 ms | 0.193 |
+| `1/2` | 24 | 155.49 ms | 122.67 ms | 120.49 ms | 0.850 |
+| `1/2` | 26 | 603.26 ms | 548.78 ms | 547.75 ms | 3.477 |
+| `1/2` | 28 | 2.39 s | 2.479 s | 2.426 s | 13.971 |
+| `1/2` | 30 | 9.28 s | 10.457 s | 10.452 s | 55.967 |
+| `1/4` | 20 | 32.17 ms | 18.13 ms | 17.82 ms | 0.078 |
+| `1/4` | 22 | 116.81 ms | 56.08 ms | 54.45 ms | 0.443 |
+| `1/4` | 24 | 454.06 ms | 295.33 ms | 295.10 ms | 1.855 |
+| `1/4` | 26 | 1.79 s | 1.353 s | 1.353 s | 7.477 |
+| `1/4` | 28 | 7.05 s | 5.962 s | 5.961 s | 29.973 |
+| `1/4` | 30 | 27.58 s | 23.708 s | 23.693 s | 119.969 |
+
+### Binary Spectral QA — GF(2^64) -> GF(2^128) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 10.95 ms | 6.040 ms | 6.155 ms | 0.027 |
+| `1/2` | 22 | 38.85 ms | 30.80 ms | 31.20 ms | 0.225 |
+| `1/2` | 24 | 155.26 ms | 130.34 ms | 131.14 ms | 0.973 |
+| `1/2` | 26 | 595.10 ms | 597.12 ms | 599.81 ms | 3.975 |
+| `1/2` | 28 | 2.37 s | 2.643 s | 2.643 s | 15.973 |
+| `1/2` | 30 | 9.29 s | 11.591 s | 11.586 s | 63.977 |
+| `1/4` | 20 | 30.32 ms | 14.31 ms | 14.47 ms | 0.086 |
+| `1/4` | 22 | 113.86 ms | 60.41 ms | 60.02 ms | 0.475 |
+| `1/4` | 24 | 447.48 ms | 283.99 ms | 282.08 ms | 1.977 |
+| `1/4` | 26 | 1.77 s | 1.314 s | 1.309 s | 7.967 |
+| `1/4` | 28 | 7.00 s | 5.908 s | 5.891 s | 31.969 |
+| `1/4` | 30 | 27.14 s | 21.630 s | 21.602 s | 127.975 |
+
+### Prime Packed WHT QA — Goldilocks (64-bit) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 21.20 ms | 5.203 ms | 5.138 ms | 0.041 |
+| `1/2` | 22 | 81.73 ms | 20.80 ms | 20.66 ms | 0.158 |
+| `1/2` | 24 | 307.00 ms | 118.75 ms | 117.26 ms | 0.627 |
+| `1/2` | 26 | 1.20 s | 671.61 ms | 688.74 ms | 2.502 |
+| `1/2` | 28 | 4.82 s | 3.052 s | 3.052 s | 10.002 |
+| `1/2` | 30 | 18.63 s | 13.029 s | 12.894 s | 40.002 |
+| `1/4` | 20 | 39.69 ms | 9.139 ms | 9.172 ms | 0.072 |
+| `1/4` | 22 | 158.05 ms | 36.48 ms | 36.25 ms | 0.283 |
+| `1/4` | 24 | 633.43 ms | 235.00 ms | 234.93 ms | 1.127 |
+| `1/4` | 26 | 2.52 s | 1.272 s | 1.295 s | 4.502 |
+| `1/4` | 28 | 10.02 s | 5.704 s | 5.703 s | 18.002 |
+| `1/4` | 30 | 39.22 s | 25.403 s | 25.230 s | 72.002 |
+
+### Prime Packed WHT QA — M127 (2^127 - 1) (32T)
+
+| Rate | k | Setup | Mean Encode | Median Encode | Peak RSS (GiB) |
+|---|---:|---:|---:|---:|---:|
+| `1/2` | 20 | 42.97 ms | 10.33 ms | 10.15 ms | 0.080 |
+| `1/2` | 22 | 160.47 ms | 41.99 ms | 41.41 ms | 0.314 |
+| `1/2` | 24 | 638.20 ms | 268.65 ms | 268.74 ms | 1.252 |
+| `1/2` | 26 | 2.46 s | 1.304 s | 1.303 s | 5.002 |
+| `1/2` | 28 | 9.62 s | 5.850 s | 5.851 s | 20.000 |
+| `1/2` | 30 | 37.90 s | 26.009 s | 26.018 s | 80.002 |
+| `1/4` | 20 | 84.63 ms | 19.20 ms | 19.29 ms | 0.143 |
+| `1/4` | 22 | 329.66 ms | 79.22 ms | 78.96 ms | 0.564 |
+| `1/4` | 24 | 1.30 s | 543.67 ms | 520.73 ms | 2.252 |
+| `1/4` | 26 | 5.20 s | 2.624 s | 2.604 s | 9.002 |
+| `1/4` | 28 | 20.36 s | 11.422 s | 11.423 s | 36.002 |
+| `1/4` | 30 | 83.28 s | 56.234 s | 57.858 s | 144.002 |
+
+## Notes
+
+- In mixed subfield-to-extension rows (e.g., `GF(2^32) -> GF(2^128)`), `2^k` input elements in the smaller subfield are encoded into `2^k / rate` extension-field codeword elements.
+- All 96 configurations completed from `k = 20` to `k = 30`.

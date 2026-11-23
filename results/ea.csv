@@ -1,37 +1,37 @@
-table_id,zoo_id,code_family,variant,repo,field,field_bits,k,input_elements,input_bytes,nominal_rate,actual_rate,codeword_elements,threads,setup_ms,encode_mean_ms,encode_median_ms,peak_rss_gib,status,notes
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,20,1048576,33554432,1/2,0.500000000000,2097152,32,91465.738803000,1495.389607667,1496.377123000,17.802734375,OK, peak minor faults/sample=135399; timed major faults=0. 
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,22,4194304,134217728,1/2,0.500000000000,8388608,32,400089.051315000,8929.561418667,8930.289693000,77.984375000,OK, peak minor faults/sample=711575; timed major faults=0. 
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,24,16777216,536870912,1/2,0.500000000000,33554432,32,1778429.358169000,42983.968019333,43007.512645000,338.970703125,OK, peak minor faults/sample=35891290; timed major faults=0. 
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,26,67108864,,1/2,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 1464.0 GiB.
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,28,268435456,,1/2,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 6288.0 GiB.
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,30,1073741824,,1/2,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 26880.0 GiB.
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,20,1048576,33554432,1/4,0.250000000000,4194304,32,96443.250348000,1581.250008000,1583.513669000,18.714843750,OK, peak minor faults/sample=126285; timed major faults=0. 
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,22,4194304,134217728,1/4,0.250000000000,16777216,32,417626.769973000,9396.915828667,9410.258684000,81.611328125,OK, peak minor faults/sample=829448; timed major faults=0. 
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,24,16777216,536870912,1/4,0.250000000000,67108864,32,1838103.542576000,43662.595912667,43683.954230000,353.468750000,OK, peak minor faults/sample=5391414; timed major faults=0. 
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,26,67108864,,1/4,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 1522.0 GiB.
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,28,268435456,,1/4,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 6520.0 GiB.
-native_fields_1d,7,ea,ea-explicit,ERA local source snapshot,secp256k1,256,30,1073741824,,1/4,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 27808.0 GiB.
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,20,1048576,33554432,1/2,0.500000000000,2097152,32,55101.215764000,1383.340055667,1383.103547000,17.808593750,OK, peak minor faults/sample=131090; timed major faults=0. 
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,22,4194304,134217728,1/2,0.500000000000,8388608,32,237966.955314000,8602.753890000,8616.211132000,77.994140625,OK, peak minor faults/sample=3657436; timed major faults=0. 
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,24,16777216,536870912,1/2,0.500000000000,33554432,32,1046678.470499000,39823.151719000,39823.175425000,338.972656250,OK, peak minor faults/sample=2764865; timed major faults=0. 
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,26,67108864,,1/2,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 1464.0 GiB.
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,28,268435456,,1/2,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 6288.0 GiB.
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,30,1073741824,,1/2,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 26880.0 GiB.
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,20,1048576,33554432,1/4,0.250000000000,4194304,32,58302.378565000,1457.507333333,1458.924066000,18.708984375,OK, peak minor faults/sample=97504; timed major faults=0. 
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,22,4194304,134217728,1/4,0.250000000000,16777216,32,251792.932870000,9011.968485333,9004.628482000,81.615234375,OK, peak minor faults/sample=3739285; timed major faults=0. 
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,24,16777216,536870912,1/4,0.250000000000,67108864,32,1108526.446104000,41378.064859000,41376.893058000,353.470703125,OK, peak minor faults/sample=2875451; timed major faults=0. 
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,26,67108864,,1/4,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 1522.0 GiB.
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,28,268435456,,1/4,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 6520.0 GiB.
-native_fields_1d,7,ea,eacode-official,EACode CRYPTO’24 artifact,ristretto255,253,30,1073741824,,1/4,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 27808.0 GiB.
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,20,1048576,8388608,1/2,0.500000000000,2097152,32,5385.335608000,137.953130667,138.016173000,8.869140625,OK, peak minor faults/sample=50; timed major faults=0. 
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,22,4194304,33554432,1/2,0.500000000000,8388608,32,22886.324552000,1369.412054667,1369.157353000,38.900390625,OK, peak minor faults/sample=172719; timed major faults=0. 
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,24,16777216,134217728,1/2,0.500000000000,33554432,32,103173.406476000,7717.441388000,7711.501818000,169.103515625,OK, peak minor faults/sample=768575; timed major faults=0. 
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,26,67108864,,1/2,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 730.5 GiB.
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,28,268435456,,1/2,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 3138.0 GiB.
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,30,1073741824,,1/2,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 13416.0 GiB.
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,20,1048576,8388608,1/4,0.250000000000,4194304,32,5656.100703000,148.322413333,148.197914000,9.291015625,OK, peak minor faults/sample=20; timed major faults=0. 
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,22,4194304,33554432,1/4,0.250000000000,16777216,32,23988.078684000,1447.287758667,1447.299629000,40.658203125,OK, peak minor faults/sample=131095; timed major faults=0. 
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,24,16777216,134217728,1/4,0.250000000000,67108864,32,107859.580963000,8011.911646667,8008.080302000,176.097656250,OK, peak minor faults/sample=655465; timed major faults=0. 
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,26,67108864,,1/4,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 758.5 GiB.
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,28,268435456,,1/4,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 3250.0 GiB.
-prime_goldilocks_1d,7,ea,ea-explicit,ERA local source snapshot,goldilocks,64,30,1073741824,,1/4,,,32,,,,,OOM_SKIPPED,Explicit matrix plus message/output lower bound 13864.0 GiB.
+variant,field,rate,actual_rate,k,threads,setup_ms,encode_mean_ms,encode_median_ms,peak_rss_gib,status
+ea-explicit,goldilocks,1/2,0.500000000000,20,32,5385.335608000,137.953130667,138.016173000,8.869140625,OK
+ea-explicit,goldilocks,1/2,0.500000000000,22,32,22886.324552000,1369.412054667,1369.157353000,38.900390625,OK
+ea-explicit,goldilocks,1/2,0.500000000000,24,32,103173.406476000,7717.441388000,7711.501818000,169.103515625,OK
+ea-explicit,goldilocks,1/2,,26,32,,,,,OOM_SKIPPED
+ea-explicit,goldilocks,1/2,,28,32,,,,,OOM_SKIPPED
+ea-explicit,goldilocks,1/2,,30,32,,,,,OOM_SKIPPED
+ea-explicit,goldilocks,1/4,0.250000000000,20,32,5656.100703000,148.322413333,148.197914000,9.291015625,OK
+ea-explicit,goldilocks,1/4,0.250000000000,22,32,23988.078684000,1447.287758667,1447.299629000,40.658203125,OK
+ea-explicit,goldilocks,1/4,0.250000000000,24,32,107859.580963000,8011.911646667,8008.080302000,176.097656250,OK
+ea-explicit,goldilocks,1/4,,26,32,,,,,OOM_SKIPPED
+ea-explicit,goldilocks,1/4,,28,32,,,,,OOM_SKIPPED
+ea-explicit,goldilocks,1/4,,30,32,,,,,OOM_SKIPPED
+ea-explicit,secp256k1,1/2,0.500000000000,20,32,91465.738803000,1495.389607667,1496.377123000,17.802734375,OK
+ea-explicit,secp256k1,1/2,0.500000000000,22,32,400089.051315000,8929.561418667,8930.289693000,77.984375000,OK
+ea-explicit,secp256k1,1/2,0.500000000000,24,32,1778429.358169000,42983.968019333,43007.512645000,338.970703125,OK
+ea-explicit,secp256k1,1/2,,26,32,,,,,OOM_SKIPPED
+ea-explicit,secp256k1,1/2,,28,32,,,,,OOM_SKIPPED
+ea-explicit,secp256k1,1/2,,30,32,,,,,OOM_SKIPPED
+ea-explicit,secp256k1,1/4,0.250000000000,20,32,96443.250348000,1581.250008000,1583.513669000,18.714843750,OK
+ea-explicit,secp256k1,1/4,0.250000000000,22,32,417626.769973000,9396.915828667,9410.258684000,81.611328125,OK
+ea-explicit,secp256k1,1/4,0.250000000000,24,32,1838103.542576000,43662.595912667,43683.954230000,353.468750000,OK
+ea-explicit,secp256k1,1/4,,26,32,,,,,OOM_SKIPPED
+ea-explicit,secp256k1,1/4,,28,32,,,,,OOM_SKIPPED
+ea-explicit,secp256k1,1/4,,30,32,,,,,OOM_SKIPPED
+eacode-official,ristretto255,1/2,0.500000000000,20,32,55101.215764000,1383.340055667,1383.103547000,17.808593750,OK
+eacode-official,ristretto255,1/2,0.500000000000,22,32,237966.955314000,8602.753890000,8616.211132000,77.994140625,OK
+eacode-official,ristretto255,1/2,0.500000000000,24,32,1046678.470499000,39823.151719000,39823.175425000,338.972656250,OK
+eacode-official,ristretto255,1/2,,26,32,,,,,OOM_SKIPPED
+eacode-official,ristretto255,1/2,,28,32,,,,,OOM_SKIPPED
+eacode-official,ristretto255,1/2,,30,32,,,,,OOM_SKIPPED
+eacode-official,ristretto255,1/4,0.250000000000,20,32,58302.378565000,1457.507333333,1458.924066000,18.708984375,OK
+eacode-official,ristretto255,1/4,0.250000000000,22,32,251792.932870000,9011.968485333,9004.628482000,81.615234375,OK
+eacode-official,ristretto255,1/4,0.250000000000,24,32,1108526.446104000,41378.064859000,41376.893058000,353.470703125,OK
+eacode-official,ristretto255,1/4,,26,32,,,,,OOM_SKIPPED
+eacode-official,ristretto255,1/4,,28,32,,,,,OOM_SKIPPED
+eacode-official,ristretto255,1/4,,30,32,,,,,OOM_SKIPPED
