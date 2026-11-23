@@ -7,7 +7,7 @@ Benchmark archive for linear code encoders used in code-based polynomial commitm
 ```text
 code-bench/
 ├── README.md        # Overview and index of benchmarked code families
-├── TEMPLATE.md      # Markdown template for adding new code families
+├── TEMPLATE.md      # Template for benchmark results
 ├── docs/
 │   └── index.html   # Interactive comparison page
 └── results/         # Paired <code_family>.md and <code_family>.csv files
@@ -167,4 +167,3 @@ Full tables including `Setup` time, arithmetic mean and median `Encode` time, `P
 - CSV timings use milliseconds (`setup_ms`, `encode_mean_ms`, `encode_median_ms`) and memory uses `peak_rss_gib` (GiB).
 - Equal `k` across different fields does not imply equal input byte sizes: `plonkish_basefold` stores Goldilocks elements in 16 bytes (vs. 8 bytes in Plonky3 and HyperFold), `Lightning` maps `u64` inputs to `BN254` parities, and `SPIN` operates on 128-bit blocks.
 - `ERA` (`ρ ≈ 0.476 / 0.238`) and `Bolt` (`ρ = 0.800 / 0.667`) include inner-code redundancy in their actual rates; `1T` marks single-threaded implementations.
-- Use [`TEMPLATE.md`](TEMPLATE.md) when adding a new code family.
